@@ -42,9 +42,17 @@ func (m *Manager) ListInstalledPackages(ctx context.Context) ([]api.PackageInfo,
 }
 
 func (m *Manager) doListAvailablePackages(ctx context.Context) ([]api.PackageInfo, error) {
-	format := "%{name}|%{epoch}|%{version}|%{release}|%{arch}|%{sourcerpm}|%{repoid}\n"
-	args := []string{"-q", "repoquery", "--qf", format}
+	tags := []string{"name", "epoch", "version", "release", "arch", "sourcerpm", "repoid"}
+	// QQQ and YYY are there to make filtering spurious lines easier.
+	format := "QQQ"
+	for _, field := range tags {
+		format += "|%{" + field + "}"
+	}
+	// Trailing NL is not required with DNF 4, but will be required with DNF 5.
+	// With DNF 4 it will result in empty lines, but they are ignored anyway.
+	format += "|YYY\n"
 
+	args := []string{"-q", "repoquery", "--qf", format}
 	cmd := exec.CommandContext(ctx, m.Bin, args...)
 
 	stdout, err := cmd.StdoutPipe()
@@ -61,11 +69,13 @@ func (m *Manager) doListAvailablePackages(ctx context.Context) ([]api.PackageInf
 	scanner := bufio.NewScanner(stdout)
 	for scanner.Scan() {
 		line := strings.TrimSpace(scanner.Text())
-		if line == "" {
+		if !strings.HasPrefix(line, "QQQ|") || !strings.HasSuffix(line, "|YYY") {
 			continue
 		}
-		fields := strings.SplitN(line, "|", 7)
-		if len(fields) != 7 {
+		line = strings.TrimPrefix(line, "QQQ|")
+		line = strings.TrimSuffix(line, "|YYY")
+		fields := strings.SplitN(line, "|", len(tags))
+		if len(fields) != len(tags) {
 			continue
 		}
 		name := fields[0]
