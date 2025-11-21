@@ -6,10 +6,11 @@ import (
 	"fmt"
 	"os"
 	"os/exec"
+	"strings"
+
 	"github.com/mizdebsk/rhel-drivers/internal/api"
 	"github.com/mizdebsk/rhel-drivers/internal/cache"
 	"github.com/mizdebsk/rhel-drivers/internal/log"
-	"strings"
 )
 
 const defaultDNFBinary = "dnf"

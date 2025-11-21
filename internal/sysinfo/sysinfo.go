@@ -3,10 +3,11 @@ package sysinfo
 import (
 	"bufio"
 	"os"
-	"github.com/mizdebsk/rhel-drivers/internal/log"
 	"runtime"
 	"strconv"
 	"strings"
+
+	"github.com/mizdebsk/rhel-drivers/internal/log"
 )
 
 const osReleasePath = "/etc/os-release"
