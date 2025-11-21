@@ -46,7 +46,11 @@ func detectOs(path string) (bool, int) {
 		log.Logf("unable to open %s for reading: %v", path, err)
 		return false, 0
 	}
-	defer f.Close()
+	defer func() {
+		if err := f.Close(); err != nil {
+			log.Warnf("failed to close file %s: %v", path, err)
+		}
+	}()
 
 	var isRhel bool
 	var osVersion int

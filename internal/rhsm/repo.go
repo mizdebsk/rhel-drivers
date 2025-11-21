@@ -5,6 +5,8 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
+
+	"github.com/mizdebsk/rhel-drivers/internal/log"
 )
 
 func repoEnabled(path, repoID string) bool {
@@ -12,7 +14,11 @@ func repoEnabled(path, repoID string) bool {
 	if err != nil {
 		return false
 	}
-	defer f.Close()
+	defer func() {
+		if err := f.Close(); err != nil {
+			log.Warnf("failed to close file %s: %v", path, err)
+		}
+	}()
 
 	sc := bufio.NewScanner(f)
 	inSection := false

@@ -20,20 +20,28 @@ func configureStdLog() {
 	stdlog.SetFlags(stdlog.LstdFlags | stdlog.Lshortfile)
 }
 
-func stdPrintf(format string, args ...any) {
+func printToLogger(format string, args ...any) {
 	configureStdLogOnce.Do(configureStdLog)
-	stdlog.Output(3, fmt.Sprintf(format, args...))
+	if err := stdlog.Output(3, fmt.Sprintf(format, args...)); err != nil {
+		panic(err)
+	}
+}
+
+func printToStderr(format string, args ...any) {
+	if _, err := fmt.Fprintf(os.Stderr, format+"\n", args...); err != nil {
+		panic(err)
+	}
 }
 
 func Debugf(format string, args ...any) {
 	if Debug {
-		stdPrintf(format, args...)
+		printToLogger(format, args...)
 	}
 }
 
 func Logf(format string, args ...any) {
 	if Debug {
-		stdPrintf(format, args...)
+		printToLogger(format, args...)
 		return
 	}
 	if Quiet {
@@ -42,35 +50,35 @@ func Logf(format string, args ...any) {
 	if !Verbose {
 		return
 	}
-	fmt.Fprintf(os.Stderr, format+"\n", args...)
+	printToStderr(format, args...)
 }
 
 func Infof(format string, args ...any) {
 	if Debug {
-		stdPrintf(format, args...)
+		printToLogger(format, args...)
 		return
 	}
 	if Quiet {
 		return
 	}
-	fmt.Fprintf(os.Stderr, format+"\n", args...)
+	printToStderr(format, args...)
 }
 
 func Warnf(format string, args ...any) {
 	if Debug {
-		stdPrintf(format, args...)
+		printToLogger(format, args...)
 		return
 	}
 	if Quiet {
 		return
 	}
-	fmt.Fprintf(os.Stderr, "WARNING: "+format+"\n", args...)
+	printToStderr("WARNING: "+format, args...)
 }
 
 func Errorf(format string, args ...any) {
 	if Debug {
-		stdPrintf(format, args...)
+		printToLogger(format, args...)
 		return
 	}
-	fmt.Fprintf(os.Stderr, "ERROR: "+format+"\n", args...)
+	printToStderr("ERROR: "+format, args...)
 }
