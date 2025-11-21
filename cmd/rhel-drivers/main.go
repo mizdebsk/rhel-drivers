@@ -18,10 +18,10 @@ var version = "dev"
 
 func main() {
 	ctx := context.Background()
-	sysinfo := sysinfo.DetectSysInfo()
+	systemInfo := sysinfo.DetectSysInfo()
 
 	pm := dnf.New()
-	repoVerifier := rhsm.NewVerifier(sysinfo)
+	repoVerifier := rhsm.NewVerifier(systemInfo)
 	providers := []api.Provider{nvidia.NewProvider(pm), amd.NewProvider(pm)}
 	deps := api.CoreDeps{
 		PM:           pm,
