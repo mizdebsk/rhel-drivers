@@ -1,4 +1,4 @@
-[![build status](https://img.shields.io/github/actions/workflow/status/mizdebsk/rhel-drivers/ci.yml?branch=master)](https://github.com/mizdebsk/rhel-drivers/actions/workflows/ci.yml?query=branch%3Amaster)
+[![build status](https://img.shields.io/github/actions/workflow/status/mizdebsk/rhel-drivers/ci.yml?branch=main)](https://github.com/mizdebsk/rhel-drivers/actions/workflows/ci.yml?query=branch%3Amain)
 [![License](https://img.shields.io/github/license/mizdebsk/rhel-drivers.svg?label=License)](https://www.gnu.org/licenses/gpl-3.0-standalone.html)
 
 This is free software: you can redistribute it and/or modify it under
