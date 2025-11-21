@@ -5,9 +5,9 @@ import (
 	"fmt"
 	"os"
 	"os/exec"
-	"rhel-drivers/internal/api"
-	"rhel-drivers/internal/log"
-	"rhel-drivers/internal/sysinfo"
+	"github.com/mizdebsk/rhel-drivers/internal/api"
+	"github.com/mizdebsk/rhel-drivers/internal/log"
+	"github.com/mizdebsk/rhel-drivers/internal/sysinfo"
 	"strings"
 )
 

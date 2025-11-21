@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"strings"
 
-	"rhel-drivers/internal/api"
+	"github.com/mizdebsk/rhel-drivers/internal/api"
 )
 
 func parseDriverID(input string) (api.DriverID, error) {

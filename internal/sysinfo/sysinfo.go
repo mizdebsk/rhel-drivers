@@ -3,7 +3,7 @@ package sysinfo
 import (
 	"bufio"
 	"os"
-	"rhel-drivers/internal/log"
+	"github.com/mizdebsk/rhel-drivers/internal/log"
 	"runtime"
 	"strconv"
 	"strings"

@@ -1,4 +1,4 @@
-module rhel-drivers
+module github.com/mizdebsk/rhel-drivers
 
 go 1.24.9
 

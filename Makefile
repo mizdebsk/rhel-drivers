@@ -1,4 +1,4 @@
-MODULE      := rhel-drivers
+MODULE      := github.com/mizdebsk/rhel-drivers
 CMD_DIR     := ./cmd/rhel-drivers
 BIN_DIR     := dist/bin
 BIN_NAME    := rhel-drivers

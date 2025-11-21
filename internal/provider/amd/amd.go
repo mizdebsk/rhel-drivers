@@ -3,8 +3,8 @@ package amd
 import (
 	"context"
 	"fmt"
-	"rhel-drivers/internal/api"
-	"rhel-drivers/internal/log"
+	"github.com/mizdebsk/rhel-drivers/internal/api"
+	"github.com/mizdebsk/rhel-drivers/internal/log"
 )
 
 type AmdProvider struct {

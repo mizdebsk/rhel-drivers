@@ -2,11 +2,11 @@ package cli
 
 import (
 	"fmt"
-	"rhel-drivers/internal/log"
+	"github.com/mizdebsk/rhel-drivers/internal/log"
 	"strings"
 
-	"rhel-drivers/internal/api"
-	"rhel-drivers/internal/core"
+	"github.com/mizdebsk/rhel-drivers/internal/api"
+	"github.com/mizdebsk/rhel-drivers/internal/core"
 
 	"github.com/spf13/cobra"
 )

@@ -3,8 +3,8 @@ package nvidia
 import (
 	"context"
 	"fmt"
-	"rhel-drivers/internal/api"
-	"rhel-drivers/internal/rpmver"
+	"github.com/mizdebsk/rhel-drivers/internal/api"
+	"github.com/mizdebsk/rhel-drivers/internal/rpmver"
 	"sort"
 )
 
