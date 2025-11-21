@@ -3,9 +3,10 @@ package nvidia
 import (
 	"context"
 	"fmt"
+	"sort"
+
 	"github.com/mizdebsk/rhel-drivers/internal/api"
 	"github.com/mizdebsk/rhel-drivers/internal/rpmver"
-	"sort"
 )
 
 type NvidiaProvider struct {

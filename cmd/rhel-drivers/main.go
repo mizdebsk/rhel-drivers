@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"os"
+
 	"github.com/mizdebsk/rhel-drivers/internal/api"
 	"github.com/mizdebsk/rhel-drivers/internal/cli"
 	"github.com/mizdebsk/rhel-drivers/internal/dnf"

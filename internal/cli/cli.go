@@ -2,13 +2,13 @@ package cli
 
 import (
 	"fmt"
-	"github.com/mizdebsk/rhel-drivers/internal/log"
 	"strings"
+
+	"github.com/spf13/cobra"
 
 	"github.com/mizdebsk/rhel-drivers/internal/api"
 	"github.com/mizdebsk/rhel-drivers/internal/core"
-
-	"github.com/spf13/cobra"
+	"github.com/mizdebsk/rhel-drivers/internal/log"
 )
 
 var (

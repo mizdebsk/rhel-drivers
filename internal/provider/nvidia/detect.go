@@ -4,12 +4,13 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"github.com/mizdebsk/rhel-drivers/internal/log"
 	"io/fs"
 	"os"
 	"path/filepath"
 	"regexp"
 	"strings"
+
+	"github.com/mizdebsk/rhel-drivers/internal/log"
 )
 
 const (
