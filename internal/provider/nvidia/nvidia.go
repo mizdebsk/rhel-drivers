@@ -8,22 +8,22 @@ import (
 	"github.com/mizdebsk/rhel-drivers/internal/rpmver"
 )
 
-type NvidiaProvider struct {
+type prov struct {
 	PM api.PackageManager
 }
 
-var _ api.Provider = (*NvidiaProvider)(nil)
+var _ api.Provider = (*prov)(nil)
 
-func New(pm api.PackageManager) *NvidiaProvider {
-	return &NvidiaProvider{
+func NewProvider(pm api.PackageManager) api.Provider {
+	return &prov{
 		PM: pm,
 	}
 }
 
-func (i *NvidiaProvider) GetID() string {
+func (p *prov) GetID() string {
 	return "nvidia"
 }
-func (i *NvidiaProvider) GetName() string {
+func (p *prov) GetName() string {
 	return "NVIDIA"
 }
 
@@ -74,11 +74,11 @@ func packageSetStatic() []string {
 	}
 }
 
-func (i *NvidiaProvider) Install(driversInst []api.DriverID) ([]string, error) {
-	if i.PM == nil {
+func (p *prov) Install(driversInst []api.DriverID) ([]string, error) {
+	if p.PM == nil {
 		return []string{}, fmt.Errorf("no PackageManager provided for NVIDIA installer")
 	}
-	driversAvail, err := i.ListAvailable()
+	driversAvail, err := p.ListAvailable()
 	if err != nil {
 		return []string{}, err
 	}
@@ -95,7 +95,7 @@ outer:
 		return []string{}, fmt.Errorf("no NVIDIA driver version %s available", driver)
 	}
 
-	avail, err := i.PM.ListAvailablePackages()
+	avail, err := p.PM.ListAvailablePackages()
 	if err != nil {
 		return []string{}, fmt.Errorf("failed to list available packages: %w", err)
 	}
@@ -108,8 +108,8 @@ outer:
 	return pkgs, nil
 }
 
-func (i *NvidiaProvider) ListAvailable() ([]api.DriverID, error) {
-	all, err := i.PM.ListAvailablePackages()
+func (p *prov) ListAvailable() ([]api.DriverID, error) {
+	all, err := p.PM.ListAvailablePackages()
 	if err != nil {
 		return nil, fmt.Errorf("failed to list available packages: %w", err)
 	}
@@ -120,7 +120,7 @@ func (i *NvidiaProvider) ListAvailable() ([]api.DriverID, error) {
 	for _, pkg := range all {
 		if pkg.Name == "nvidia-driver" {
 			drivers = append(drivers, api.DriverID{
-				ProviderID: i.GetID(),
+				ProviderID: p.GetID(),
 				Version:    pkg.Version,
 			})
 		}
@@ -131,12 +131,12 @@ func (i *NvidiaProvider) ListAvailable() ([]api.DriverID, error) {
 	return drivers, nil
 }
 
-func (i *NvidiaProvider) ListInstalled() ([]api.DriverID, error) {
-	if i.PM == nil {
+func (p *prov) ListInstalled() ([]api.DriverID, error) {
+	if p.PM == nil {
 		return []api.DriverID{}, fmt.Errorf("no PackageManager for NVIDIA installer")
 	}
 
-	all, err := i.PM.ListInstalledPackages()
+	all, err := p.PM.ListInstalledPackages()
 	if err != nil {
 		return []api.DriverID{}, err
 	}
@@ -144,7 +144,7 @@ func (i *NvidiaProvider) ListInstalled() ([]api.DriverID, error) {
 	for _, pkg := range all {
 		if pkg.Name == "nvidia-driver" {
 			drivers = append(drivers, api.DriverID{
-				ProviderID: i.GetID(),
+				ProviderID: p.GetID(),
 				Version:    pkg.Version,
 			})
 		}
@@ -155,9 +155,9 @@ func (i *NvidiaProvider) ListInstalled() ([]api.DriverID, error) {
 	return drivers, nil
 }
 
-func (i *NvidiaProvider) Remove(drivers []api.DriverID) ([]string, error) {
+func (p *prov) Remove(drivers []api.DriverID) ([]string, error) {
 
-	inst, err := i.PM.ListInstalledPackages()
+	inst, err := p.PM.ListInstalledPackages()
 	if err != nil {
 		return []string{}, fmt.Errorf("failed to list installed packages: %w", err)
 	}
@@ -170,7 +170,7 @@ func (i *NvidiaProvider) Remove(drivers []api.DriverID) ([]string, error) {
 	return pkgs, nil
 }
 
-func (i *NvidiaProvider) DetectHardware() (bool, error) {
+func (p *prov) DetectHardware() (bool, error) {
 	detector := newAutoDetector()
 	return detector.Detect()
 }

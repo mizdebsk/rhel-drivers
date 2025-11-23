@@ -7,34 +7,34 @@ import (
 	"github.com/mizdebsk/rhel-drivers/internal/log"
 )
 
-type AmdProvider struct {
+type prov struct {
 	PM api.PackageManager
 }
 
-var _ api.Provider = (*AmdProvider)(nil)
+var _ api.Provider = (*prov)(nil)
 
-func (i *AmdProvider) GetID() string {
+func (p *prov) GetID() string {
 	return "amdgpu"
 }
-func (i *AmdProvider) GetName() string {
+func (p *prov) GetName() string {
 	return "AMD GPU"
 }
 
-func NewProvider(pm api.PackageManager) *AmdProvider {
-	return &AmdProvider{
+func NewProvider(pm api.PackageManager) api.Provider {
+	return &prov{
 		PM: pm,
 	}
 }
 
-func (i *AmdProvider) Install(drivers []api.DriverID) ([]string, error) {
+func (p *prov) Install(drivers []api.DriverID) ([]string, error) {
 	if len(drivers) == 0 {
 		return []string{}, nil
 	}
 	return []string{"kmod-amdgpu"}, nil
 }
 
-func (i *AmdProvider) ListInstalled() ([]api.DriverID, error) {
-	all, err := i.PM.ListInstalledPackages()
+func (p *prov) ListInstalled() ([]api.DriverID, error) {
+	all, err := p.PM.ListInstalledPackages()
 	if err != nil {
 		return []api.DriverID{}, err
 	}
@@ -45,25 +45,25 @@ func (i *AmdProvider) ListInstalled() ([]api.DriverID, error) {
 		}
 	}
 	if len(drivers) == 0 {
-		log.Logf("%s driver is currently NOT installed", i.GetName())
+		log.Logf("%s driver is currently NOT installed", p.GetName())
 		return []api.DriverID{}, nil
 	}
-	log.Logf("%s driver is currently installed", i.GetName())
+	log.Logf("%s driver is currently installed", p.GetName())
 	return []api.DriverID{{
-		ProviderID: i.GetID(),
+		ProviderID: p.GetID(),
 		Version:    "latest",
 	}}, nil
 }
 
-func (i *AmdProvider) Remove(drivers []api.DriverID) ([]string, error) {
+func (p *prov) Remove(drivers []api.DriverID) ([]string, error) {
 	if len(drivers) == 0 {
 		return []string{}, nil
 	}
 	return []string{"kmod-amdgpu"}, nil
 }
 
-func (i *AmdProvider) ListAvailable() ([]api.DriverID, error) {
-	all, err := i.PM.ListAvailablePackages()
+func (p *prov) ListAvailable() ([]api.DriverID, error) {
+	all, err := p.PM.ListAvailablePackages()
 	if err != nil {
 		return []api.DriverID{}, err
 	}
@@ -74,15 +74,15 @@ func (i *AmdProvider) ListAvailable() ([]api.DriverID, error) {
 		}
 	}
 	if len(drivers) == 0 {
-		log.Warnf("%s driver is currently NOT available", i.GetName())
+		log.Warnf("%s driver is currently NOT available", p.GetName())
 		return []api.DriverID{}, nil
 	}
 	return []api.DriverID{{
-		ProviderID: i.GetID(),
+		ProviderID: p.GetID(),
 		Version:    "latest",
 	}}, nil
 }
 
-func (i *AmdProvider) DetectHardware() (bool, error) {
-	return false, fmt.Errorf("hardware detection for %s is not implemented", i.GetName())
+func (p *prov) DetectHardware() (bool, error) {
+	return false, fmt.Errorf("hardware detection for %s is not implemented", p.GetName())
 }
