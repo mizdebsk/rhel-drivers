@@ -85,10 +85,10 @@ func Install(deps api.CoreDeps, opts api.InstallOptions, drivers []string) error
 		}
 	}
 
-	if deps.RepoVerifier == nil {
+	if deps.RepositoryManager == nil {
 		return fmt.Errorf("no RepositoryManager provided")
 	}
-	if err := deps.RepoVerifier.EnsureRepositoriesEnabled(); err != nil {
+	if err := deps.RepositoryManager.EnsureRepositoriesEnabled(); err != nil {
 		return fmt.Errorf("failed to verify/enable repositories: %w", err)
 	}
 
@@ -116,7 +116,7 @@ func Install(deps api.CoreDeps, opts api.InstallOptions, drivers []string) error
 	for _, pkg := range allPkgs {
 		log.Logf("package will be installed: %v", pkg)
 	}
-	if err := deps.PM.Install(allPkgs, opts); err != nil {
+	if err := deps.PackageManager.Install(allPkgs, opts); err != nil {
 		return fmt.Errorf("failed to install pacakges: %w", err)
 	}
 

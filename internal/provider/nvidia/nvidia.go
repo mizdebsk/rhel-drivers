@@ -14,7 +14,7 @@ type NvidiaProvider struct {
 
 var _ api.Provider = (*NvidiaProvider)(nil)
 
-func NewProvider(pm api.PackageManager) *NvidiaProvider {
+func New(pm api.PackageManager) *NvidiaProvider {
 	return &NvidiaProvider{
 		PM: pm,
 	}

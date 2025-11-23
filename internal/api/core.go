@@ -34,10 +34,10 @@ type Provider interface {
 }
 
 type CoreDeps struct {
-	PM           PackageManager
-	RepoVerifier RepositoryManager
-	Providers    []Provider
-	Executor     exec.Executor
+	PackageManager    PackageManager
+	RepositoryManager RepositoryManager
+	Providers         []Provider
+	Executor          exec.Executor
 }
 
 type DriverStatus struct {

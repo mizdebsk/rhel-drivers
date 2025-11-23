@@ -17,22 +17,22 @@ const (
 )
 
 type repoMgr struct {
-	sysInfo sysinfo.SysInfo
-	exec    exec.Executor
+	systemInfo sysinfo.SysInfo
+	executor   exec.Executor
 }
 
 var _ api.RepositoryManager = (*repoMgr)(nil)
 
-func NewVerifier(executor exec.Executor, si sysinfo.SysInfo) api.RepositoryManager {
+func NewRepositoryManager(executor exec.Executor, systemInfo sysinfo.SysInfo) api.RepositoryManager {
 	return &repoMgr{
-		sysInfo: si,
-		exec:    executor,
+		systemInfo: systemInfo,
+		executor:   executor,
 	}
 }
 
 func (rm *repoMgr) EnsureRepositoriesEnabled() error {
-	if rm.sysInfo.IsRhel {
-		log.Logf("detected RHEL %d", rm.sysInfo.OsVersion)
+	if rm.systemInfo.IsRhel {
+		log.Logf("detected RHEL %d", rm.systemInfo.OsVersion)
 		if rm.SubscriptionManagerPresent() {
 			log.Logf("Subscription Manager is present")
 			channels := []string{"BaseOS", "AppStream", "Extensions", "Supplementary"}
@@ -63,7 +63,7 @@ func (rm *repoMgr) EnsureChannelsEnabled(channels []string) error {
 	allEnabled := true
 	args := []string{"repos"}
 	for _, channel := range channels {
-		repo := fmt.Sprintf("rhel-%d-for-%s-%s-rpms", rm.sysInfo.OsVersion, rm.sysInfo.Arch, strings.ToLower(channel))
+		repo := fmt.Sprintf("rhel-%d-for-%s-%s-rpms", rm.systemInfo.OsVersion, rm.systemInfo.Arch, strings.ToLower(channel))
 		log.Logf("mapped RHEL channel %s to repo ID %s", channel, repo)
 		if !repoEnabled(redhatRepoPath, repo) {
 			log.Infof("enabling channel %s, repository %s", channel, repo)
@@ -80,7 +80,7 @@ func (rm *repoMgr) EnsureChannelsEnabled(channels []string) error {
 	}
 
 	log.Logf("running subscription-manager to enable repositories")
-	err := rm.exec.Run(rhsmExecPath, args)
+	err := rm.executor.Run(rhsmExecPath, args)
 	if err != nil {
 		return fmt.Errorf("failed to enable repositories: %w", err)
 	}

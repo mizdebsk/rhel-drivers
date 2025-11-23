@@ -22,13 +22,13 @@ func main() {
 	executor := exec.NewExecutor(ctx)
 	systemInfo := sysinfo.DetectSysInfo()
 
-	pm := dnf.New(executor)
-	repoVerifier := rhsm.NewVerifier(executor, systemInfo)
-	providers := []api.Provider{nvidia.NewProvider(pm), amd.NewProvider(pm)}
+	packageManager := dnf.NewPackageManager(executor)
+	repositoryManager := rhsm.NewRepositoryManager(executor, systemInfo)
+	providers := []api.Provider{nvidia.New(packageManager), amd.NewProvider(packageManager)}
 	deps := api.CoreDeps{
-		PM:           pm,
-		RepoVerifier: repoVerifier,
-		Providers:    providers,
+		PackageManager:    packageManager,
+		RepositoryManager: repositoryManager,
+		Providers:         providers,
 	}
 
 	root := cli.NewRootCmd(deps, version)

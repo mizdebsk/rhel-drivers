@@ -20,7 +20,7 @@ type pkgMgr struct {
 
 var _ api.PackageManager = (*pkgMgr)(nil)
 
-func New(executor exec.Executor) api.PackageManager {
+func NewPackageManager(executor exec.Executor) api.PackageManager {
 	return &pkgMgr{
 		bin:  defaultDNFBinary,
 		exec: executor,

@@ -76,7 +76,7 @@ func Remove(deps api.CoreDeps, opts api.RemoveOptions, drivers []string) error {
 	for _, pkg := range allPkgs {
 		log.Logf("package will be installed: %v", pkg)
 	}
-	if err := deps.PM.Remove(allPkgs, opts); err != nil {
+	if err := deps.PackageManager.Remove(allPkgs, opts); err != nil {
 		return fmt.Errorf("failed to remove pacakges: %w", err)
 	}
 	return nil
