@@ -14,8 +14,8 @@ type RemoveOptions struct {
 	All    bool
 }
 
-type RepoVerifier interface {
-	VerifyAndEnable(ctx context.Context) error
+type RepositoryManager interface {
+	EnsureRepositoriesEnabled(ctx context.Context) error
 }
 
 type DriverID struct {
@@ -35,7 +35,7 @@ type Provider interface {
 
 type CoreDeps struct {
 	PM           PackageManager
-	RepoVerifier RepoVerifier
+	RepoVerifier RepositoryManager
 	Providers    []Provider
 }
 

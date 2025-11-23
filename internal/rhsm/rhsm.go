@@ -17,25 +17,25 @@ const (
 	rhsmExecPath   = "/usr/sbin/subscription-manager"
 )
 
-type Verifier struct {
+type repoMgr struct {
 	SysInfo sysinfo.SysInfo
 }
 
-var _ api.RepoVerifier = (*Verifier)(nil)
+var _ api.RepositoryManager = (*repoMgr)(nil)
 
-func NewVerifier(sysinfo sysinfo.SysInfo) *Verifier {
-	return &Verifier{
-		SysInfo: sysinfo,
+func NewVerifier(si sysinfo.SysInfo) api.RepositoryManager {
+	return &repoMgr{
+		SysInfo: si,
 	}
 }
 
-func (v *Verifier) VerifyAndEnable(ctx context.Context) error {
-	if v.SysInfo.IsRhel {
-		log.Logf("detected RHEL %d", v.SysInfo.OsVersion)
-		if v.SubscriptionManagerPresent() {
+func (rm *repoMgr) EnsureRepositoriesEnabled(ctx context.Context) error {
+	if rm.SysInfo.IsRhel {
+		log.Logf("detected RHEL %d", rm.SysInfo.OsVersion)
+		if rm.SubscriptionManagerPresent() {
 			log.Logf("Subscription Manager is present")
 			channels := []string{"BaseOS", "AppStream", "Extensions", "Supplementary"}
-			return v.EnsureChannelsEnabled(ctx, channels)
+			return rm.EnsureChannelsEnabled(ctx, channels)
 		} else {
 			log.Warnf("Subscription Manager is absent.")
 			log.Warnf("You may need to enable appropriate repositories yourself.")
@@ -47,7 +47,7 @@ func (v *Verifier) VerifyAndEnable(ctx context.Context) error {
 	return nil
 }
 
-func (v *Verifier) SubscriptionManagerPresent() bool {
+func (rm *repoMgr) SubscriptionManagerPresent() bool {
 	stat, err := os.Stat(rhsmExecPath)
 	if err != nil || stat == nil {
 		log.Debugf("stat %s failed: %v", rhsmExecPath, err)
@@ -57,12 +57,12 @@ func (v *Verifier) SubscriptionManagerPresent() bool {
 	return stat.Mode().IsRegular() && stat.Mode().Perm()&0111 != 0
 }
 
-func (v *Verifier) EnsureChannelsEnabled(ctx context.Context, channels []string) error {
+func (rm *repoMgr) EnsureChannelsEnabled(ctx context.Context, channels []string) error {
 	log.Logf("checking repository status")
 	allEnabled := true
 	args := []string{"repos"}
 	for _, channel := range channels {
-		repo := fmt.Sprintf("rhel-%d-for-%s-%s-rpms", v.SysInfo.OsVersion, v.SysInfo.Arch, strings.ToLower(channel))
+		repo := fmt.Sprintf("rhel-%d-for-%s-%s-rpms", rm.SysInfo.OsVersion, rm.SysInfo.Arch, strings.ToLower(channel))
 		log.Logf("mapped RHEL channel %s to repo ID %s", channel, repo)
 		if !repoEnabled(redhatRepoPath, repo) {
 			log.Infof("enabling channel %s, repository %s", channel, repo)

@@ -13,9 +13,9 @@ func List(ctx context.Context, deps api.CoreDeps, listInst, listAvail, hwdetect 
 
 	if listAvail {
 		if deps.RepoVerifier == nil {
-			return result, fmt.Errorf("no RepoVerifier provided")
+			return result, fmt.Errorf("no RepositoryManager provided")
 		}
-		if err := deps.RepoVerifier.VerifyAndEnable(ctx); err != nil {
+		if err := deps.RepoVerifier.EnsureRepositoriesEnabled(ctx); err != nil {
 			return result, fmt.Errorf("failed to verify/enable repositories: %w", err)
 		}
 	}
