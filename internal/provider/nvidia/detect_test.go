@@ -102,20 +102,20 @@ func TestHasFeature(t *testing.T) {
 	}
 }
 
-func TestIsSupportedNvidiaDisplay_Found(t *testing.T) {
+func TestIsCompatibleNvidiaDisplay_Found(t *testing.T) {
 	d := newAutoDetector()
-	supported := map[string]string{
+	compatible := map[string]string{
 		"31c2": "NVIDIA A100-PCIE-40GB",
 	}
 	modal := "pci:v000010DEd000031C2sv000010DEsd000013C2bc03sc00i00"
-	if !d.isSupportedNvidiaDisplay(modal, supported) {
-		t.Fatalf("expected modalias %q to be detected as supported NVIDIA display", modal)
+	if !d.isCompatibleNvidiaDisplay(modal, compatible) {
+		t.Fatalf("expected modalias %q to be detected as compatible NVIDIA display", modal)
 	}
 }
 
-func TestIsSupportedNvidiaDisplay_NotFoundOrInvalid(t *testing.T) {
+func TestIsCompatibleNvidiaDisplay_NotFoundOrInvalid(t *testing.T) {
 	d := newAutoDetector()
-	supported := map[string]string{
+	compatible := map[string]string{
 		"31c2": "NVIDIA A100-PCIE-40GB",
 	}
 	tests := []struct {
@@ -134,7 +134,7 @@ func TestIsSupportedNvidiaDisplay_NotFoundOrInvalid(t *testing.T) {
 			wantHit: false,
 		},
 		{
-			name:    "unsupported device id",
+			name:    "uncompatible device id",
 			modal:   "pci:v000010DEd0000DEADsv000010DEsd000013C2bc03sc00i00",
 			wantHit: false,
 		},
@@ -147,29 +147,29 @@ func TestIsSupportedNvidiaDisplay_NotFoundOrInvalid(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got := d.isSupportedNvidiaDisplay(tt.modal, supported)
+			got := d.isCompatibleNvidiaDisplay(tt.modal, compatible)
 			if got != tt.wantHit {
-				t.Fatalf("isSupportedNvidiaDisplay(%q) = %v, want %v", tt.modal, got, tt.wantHit)
+				t.Fatalf("isCompatibleNvidiaDisplay(%q) = %v, want %v", tt.modal, got, tt.wantHit)
 			}
 		})
 	}
 }
 
-func TestLoadSupportedDevices_UsesTestJSON(t *testing.T) {
+func TestLoadCompatibleDevices_UsesTestJSON(t *testing.T) {
 	d := newAutoDetector()
-	d.supportedGPUs = "testdata/hwdata.json"
-	supported, err := d.loadSupportedDevices()
+	d.compatibleGPUs = "testdata/hwdata.json"
+	compatible, err := d.loadCompatibleDevices()
 	if err != nil {
-		t.Fatalf("loadSupportedDevices() error = %v", err)
+		t.Fatalf("loadCompatibleDevices() error = %v", err)
 	}
-	if len(supported) == 0 {
-		t.Fatalf("loadSupportedDevices() returned 0 supported devices, want > 0")
+	if len(compatible) == 0 {
+		t.Fatalf("loadCompatibleDevices() returned 0 compatible devices, want > 0")
 	}
 }
 
 func TestDetect_WithA100SysfsAndHwdata(t *testing.T) {
 	d := newAutoDetector()
-	d.supportedGPUs = "testdata/hwdata.json"
+	d.compatibleGPUs = "testdata/hwdata.json"
 	d.modaliasRoot = "testdata/sysfs-A100-PCIE-40GB"
 	ctx := context.Background()
 	found, err := d.Detect(ctx)

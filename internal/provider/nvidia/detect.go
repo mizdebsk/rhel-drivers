@@ -14,8 +14,8 @@ import (
 )
 
 const (
-	defaultSupportedGPUsPath = "/usr/share/rhel-drivers/nvidia/supported-gpus.json"
-	defaultModaliasRoot      = "/sys/devices"
+	defaultCompatibleGPUsPath = "/usr/share/rhel-drivers/nvidia/supported-gpus.json"
+	defaultModaliasRoot       = "/sys/devices"
 
 	modaliasBus     = "pci"
 	pciClassDisplay = "03"
@@ -23,34 +23,34 @@ const (
 )
 
 type autoDetector struct {
-	supportedGPUs string
-	modaliasRoot  string
+	compatibleGPUs string
+	modaliasRoot   string
 }
 
 func newAutoDetector() autoDetector {
 	return autoDetector{
-		supportedGPUs: defaultSupportedGPUsPath,
-		modaliasRoot:  defaultModaliasRoot,
+		compatibleGPUs: defaultCompatibleGPUsPath,
+		modaliasRoot:   defaultModaliasRoot,
 	}
 }
 
 func (d *autoDetector) Detect(ctx context.Context) (bool, error) {
-	supported, err := d.loadSupportedDevices()
+	compatible, err := d.loadCompatibleDevices()
 	if err != nil {
 		return false, err
 	}
-	if len(supported) == 0 {
+	if len(compatible) == 0 {
 		return false, nil
 	}
 
-	found, err := d.scanModaliases(ctx, supported)
+	found, err := d.scanModaliases(ctx, compatible)
 	if err != nil {
 		return false, err
 	}
 	return found, nil
 }
 
-type supportedGPUFile struct {
+type compatibleGPUFile struct {
 	Chips []struct {
 		Name     string   `json:"name"`
 		DevID    string   `json:"devid"`
@@ -58,19 +58,19 @@ type supportedGPUFile struct {
 	} `json:"chips"`
 }
 
-func (d *autoDetector) loadSupportedDevices() (map[string]string, error) {
-	log.Logf("loading supported GPUs from %s", d.supportedGPUs)
-	data, err := os.ReadFile(d.supportedGPUs)
+func (d *autoDetector) loadCompatibleDevices() (map[string]string, error) {
+	log.Logf("loading compatible GPUs from %s", d.compatibleGPUs)
+	data, err := os.ReadFile(d.compatibleGPUs)
 	if err != nil {
 		if os.IsNotExist(err) {
-			return nil, fmt.Errorf("cannot find supported GPUs file: %s", d.supportedGPUs)
+			return nil, fmt.Errorf("cannot find compatible GPUs file: %s", d.compatibleGPUs)
 		}
-		return nil, fmt.Errorf("failed to read supported GPUs file %s: %w", d.supportedGPUs, err)
+		return nil, fmt.Errorf("failed to read compatible GPUs file %s: %w", d.compatibleGPUs, err)
 	}
 
-	var s supportedGPUFile
+	var s compatibleGPUFile
 	if err := json.Unmarshal(data, &s); err != nil {
-		return nil, fmt.Errorf("failed to parse supported GPUs file %s: %w", d.supportedGPUs, err)
+		return nil, fmt.Errorf("failed to parse compatible GPUs file %s: %w", d.compatibleGPUs, err)
 	}
 
 	result := make(map[string]string)
@@ -110,7 +110,7 @@ func normalizeDevID(id string) string {
 	return id
 }
 
-func (d *autoDetector) scanModaliases(ctx context.Context, supported map[string]string) (bool, error) {
+func (d *autoDetector) scanModaliases(ctx context.Context, compatible map[string]string) (bool, error) {
 	found := false
 
 	walkFn := func(path string, de fs.DirEntry, err error) error {
@@ -130,7 +130,7 @@ func (d *autoDetector) scanModaliases(ctx context.Context, supported map[string]
 			return nil
 		}
 		modal := strings.TrimSpace(strings.ToLower(string(content)))
-		if d.isSupportedNvidiaDisplay(modal, supported) {
+		if d.isCompatibleNvidiaDisplay(modal, compatible) {
 			log.Logf("modalias path: %s", path)
 			log.Logf("modalias entry: %s", modal)
 			found = true
@@ -145,9 +145,9 @@ func (d *autoDetector) scanModaliases(ctx context.Context, supported map[string]
 		return false, fmt.Errorf("error scanning modalias files in %s: %w", d.modaliasRoot, err)
 	}
 	if found {
-		log.Logf("supported NVIDIA hardware was found")
+		log.Logf("compatible NVIDIA hardware was found")
 	} else {
-		log.Logf("supported NVIDIA hardware was NOT found")
+		log.Logf("compatible NVIDIA hardware was NOT found")
 	}
 	return found, nil
 }
@@ -163,7 +163,7 @@ var modaliasRe = regexp.MustCompile(
 		`i([0-9A-Fa-f]{2})$`, // interface
 )
 
-func (d *autoDetector) isSupportedNvidiaDisplay(modalias string, supported map[string]string) bool {
+func (d *autoDetector) isCompatibleNvidiaDisplay(modalias string, compatible map[string]string) bool {
 	if !strings.HasPrefix(modalias, modaliasBus+":") {
 		return false
 	}
@@ -192,7 +192,7 @@ func (d *autoDetector) isSupportedNvidiaDisplay(modalias string, supported map[s
 		return false
 	}
 
-	if name, ok := supported[device4]; ok {
+	if name, ok := compatible[device4]; ok {
 		log.Infof("found compatible hardware: %s", name)
 		return true
 	}
