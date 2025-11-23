@@ -1,7 +1,6 @@
 package cache
 
 import (
-	"context"
 	"sync"
 )
 
@@ -12,8 +11,7 @@ type Cache[T any] struct {
 }
 
 func (c *Cache[T]) Get(
-	ctx context.Context,
-	compute func(context.Context) (T, error),
+	compute func() (T, error),
 ) (T, error) {
 	c.mu.Lock()
 	defer c.mu.Unlock()
@@ -21,7 +19,7 @@ func (c *Cache[T]) Get(
 		v := c.val
 		return v, nil
 	}
-	v, err := compute(ctx)
+	v, err := compute()
 	if err != nil {
 		var zero T
 		return zero, err

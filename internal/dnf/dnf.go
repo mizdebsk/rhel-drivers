@@ -1,7 +1,6 @@
 package dnf
 
 import (
-	"context"
 	"fmt"
 	"strings"
 
@@ -31,7 +30,7 @@ var availableCache = cache.Cache[[]api.PackageInfo]{}
 var installedCache = cache.Cache[[]api.PackageInfo]{}
 
 func (pm *pkgMgr) ListAvailablePackages() ([]api.PackageInfo, error) {
-	return availableCache.Get(nil, func(ctx context.Context) ([]api.PackageInfo, error) {
+	return availableCache.Get(func() ([]api.PackageInfo, error) {
 		tags := []string{"name", "epoch", "version", "release", "arch", "sourcerpm", "repoid"}
 		// QQQ and YYY are there to make filtering spurious lines easier.
 		format := "QQQ"
@@ -50,7 +49,7 @@ func (pm *pkgMgr) ListAvailablePackages() ([]api.PackageInfo, error) {
 }
 
 func (pm *pkgMgr) ListInstalledPackages() ([]api.PackageInfo, error) {
-	return installedCache.Get(nil, func(ctx context.Context) ([]api.PackageInfo, error) {
+	return installedCache.Get(func() ([]api.PackageInfo, error) {
 		tags := []string{"NAME", "EPOCH", "VERSION", "RELEASE", "ARCH", "SOURCERPM"}
 		format := "QQQ"
 		for _, field := range tags {
