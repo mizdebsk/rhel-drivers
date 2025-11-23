@@ -1,7 +1,6 @@
 package cache
 
 import (
-	"context"
 	"errors"
 	"sync"
 	"testing"
@@ -14,7 +13,7 @@ func TestCacheGet(t *testing.T) {
 	type testCase[T any] struct {
 		name           string
 		cache          func() *Cache[T]
-		compute        func(context.Context) (T, error)
+		compute        func() (T, error)
 		expectedVal    T
 		expectedErr    error
 		concurrentRuns int
@@ -27,7 +26,7 @@ func TestCacheGet(t *testing.T) {
 			cache: func() *Cache[int] {
 				return &Cache[int]{}
 			},
-			compute: func(ctx context.Context) (int, error) {
+			compute: func() (int, error) {
 				return 42, nil
 			},
 			expectedVal: 42,
@@ -41,7 +40,7 @@ func TestCacheGet(t *testing.T) {
 					val:   99,
 				}
 			},
-			compute: func(ctx context.Context) (int, error) {
+			compute: func() (int, error) {
 				return 0, nil
 			},
 			expectedVal: 99,
@@ -52,7 +51,7 @@ func TestCacheGet(t *testing.T) {
 			cache: func() *Cache[int] {
 				return &Cache[int]{}
 			},
-			compute: func(ctx context.Context) (int, error) {
+			compute: func() (int, error) {
 				return 0, errCompute
 			},
 			expectedVal: 0,
@@ -63,7 +62,7 @@ func TestCacheGet(t *testing.T) {
 			cache: func() *Cache[int] {
 				return &Cache[int]{}
 			},
-			compute: func(ctx context.Context) (int, error) {
+			compute: func() (int, error) {
 				time.Sleep(10 * time.Millisecond)
 				return 88, nil
 			},
@@ -76,7 +75,6 @@ func TestCacheGet(t *testing.T) {
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
 			cache := tc.cache()
-			ctx := context.Background()
 			var mu sync.Mutex
 			var actualResults []struct {
 				val int
@@ -89,7 +87,7 @@ func TestCacheGet(t *testing.T) {
 					wg.Add(1)
 					go func() {
 						defer wg.Done()
-						val, err := cache.Get(ctx, tc.compute)
+						val, err := cache.Get(tc.compute)
 						mu.Lock()
 						actualResults = append(actualResults, struct {
 							val int
@@ -107,7 +105,7 @@ func TestCacheGet(t *testing.T) {
 					}
 				}
 			} else {
-				val, err := cache.Get(ctx, tc.compute)
+				val, err := cache.Get(tc.compute)
 				if val != tc.expectedVal || !errors.Is(err, tc.expectedErr) {
 					t.Errorf("unexpected result: got val=%v, err=%v; want val=%v, err=%v",
 						val, err, tc.expectedVal, tc.expectedErr)
