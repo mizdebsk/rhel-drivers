@@ -5,13 +5,13 @@ import (
 
 	"github.com/golang/mock/gomock"
 	"github.com/mizdebsk/rhel-drivers/internal/api"
-	"github.com/mizdebsk/rhel-drivers/internal/exec"
+	"github.com/mizdebsk/rhel-drivers/internal/mocks"
 )
 
 func TestInstall(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
-	mockExec := exec.NewMockExecutor(ctrl)
+	mockExec := mocks.NewMockExecutor(ctrl)
 	mockExec.EXPECT().Run("mydnf", []string{"install", "foo", "bar"}).Return(nil)
 	pm := pkgMgr{
 		bin:  "mydnf",

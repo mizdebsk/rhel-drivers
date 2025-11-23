@@ -1,25 +1,20 @@
 package exec
 
-//go:generate mockgen -source=exec.go -destination=exec_mock.go -package=exec
-
 import (
 	"bufio"
 	"context"
 	"fmt"
 	"os"
 	"os/exec"
-)
 
-type Executor interface {
-	Run(command string, args []string) error
-	RunCapture(command string, args ...string) ([]string, error)
-}
+	"github.com/mizdebsk/rhel-drivers/internal/api"
+)
 
 type cmdExec struct {
 	ctx context.Context
 }
 
-func NewExecutor(ctx context.Context) Executor {
+func NewExecutor(ctx context.Context) api.Executor {
 	return &cmdExec{
 		ctx: ctx,
 	}

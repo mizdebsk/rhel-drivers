@@ -6,7 +6,6 @@ import (
 
 	"github.com/mizdebsk/rhel-drivers/internal/api"
 	"github.com/mizdebsk/rhel-drivers/internal/cache"
-	"github.com/mizdebsk/rhel-drivers/internal/exec"
 	"github.com/mizdebsk/rhel-drivers/internal/log"
 )
 
@@ -14,12 +13,12 @@ const defaultDNFBinary = "dnf"
 
 type pkgMgr struct {
 	bin  string
-	exec exec.Executor
+	exec api.Executor
 }
 
 var _ api.PackageManager = (*pkgMgr)(nil)
 
-func NewPackageManager(executor exec.Executor) api.PackageManager {
+func NewPackageManager(executor api.Executor) api.PackageManager {
 	return &pkgMgr{
 		bin:  defaultDNFBinary,
 		exec: executor,

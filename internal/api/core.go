@@ -1,9 +1,5 @@
 package api
 
-import (
-	"github.com/mizdebsk/rhel-drivers/internal/exec"
-)
-
 type InstallOptions struct {
 	AutoDetect bool
 	DryRun     bool
@@ -37,7 +33,7 @@ type CoreDeps struct {
 	PackageManager    PackageManager
 	RepositoryManager RepositoryManager
 	Providers         []Provider
-	Executor          exec.Executor
+	Executor          Executor
 }
 
 type DriverStatus struct {

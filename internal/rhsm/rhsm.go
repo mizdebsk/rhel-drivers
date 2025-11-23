@@ -6,7 +6,6 @@ import (
 	"strings"
 
 	"github.com/mizdebsk/rhel-drivers/internal/api"
-	"github.com/mizdebsk/rhel-drivers/internal/exec"
 	"github.com/mizdebsk/rhel-drivers/internal/log"
 	"github.com/mizdebsk/rhel-drivers/internal/sysinfo"
 )
@@ -18,12 +17,12 @@ const (
 
 type repoMgr struct {
 	systemInfo sysinfo.SysInfo
-	executor   exec.Executor
+	executor   api.Executor
 }
 
 var _ api.RepositoryManager = (*repoMgr)(nil)
 
-func NewRepositoryManager(executor exec.Executor, systemInfo sysinfo.SysInfo) api.RepositoryManager {
+func NewRepositoryManager(executor api.Executor, systemInfo sysinfo.SysInfo) api.RepositoryManager {
 	return &repoMgr{
 		systemInfo: systemInfo,
 		executor:   executor,
