@@ -1,15 +1,13 @@
 package dnf
 
 import (
-	"bufio"
 	"context"
 	"fmt"
-	"os"
-	"os/exec"
 	"strings"
 
 	"github.com/mizdebsk/rhel-drivers/internal/api"
 	"github.com/mizdebsk/rhel-drivers/internal/cache"
+	"github.com/mizdebsk/rhel-drivers/internal/exec"
 	"github.com/mizdebsk/rhel-drivers/internal/log"
 )
 
@@ -41,7 +39,11 @@ func (pm *pkgMgr) ListAvailablePackages(ctx context.Context) ([]api.PackageInfo,
 		// Trailing NL is not required with DNF 4, but will be required with DNF 5.
 		// With DNF 4 it will result in empty lines, but they are ignored anyway.
 		format += "|YYY\n"
-		return runQueryCommand(ctx, pm.Bin, "-q", "repoquery", "--qf", format)
+		lines, err := exec.RunCommandCapture(ctx, pm.Bin, []string{"-q", "repoquery", "--qf", format}...)
+		if err != nil {
+			return nil, fmt.Errorf("failed to list available packages: %w", err)
+		}
+		return parseQueryOutput(lines), nil
 	})
 }
 
@@ -53,27 +55,18 @@ func (pm *pkgMgr) ListInstalledPackages(ctx context.Context) ([]api.PackageInfo,
 			format += "|%|" + field + "?{%{" + field + "}}|"
 		}
 		format += "||YYY\n"
-		return runQueryCommand(ctx, "rpm", "-qa", "--qf", format)
+		lines, err := exec.RunCommandCapture(ctx, "rpm", []string{"-qa", "--qf", format}...)
+		if err != nil {
+			return nil, fmt.Errorf("failed to list installed packages: %w", err)
+		}
+		return parseQueryOutput(lines), nil
 	})
 }
 
-func runQueryCommand(ctx context.Context, command string, args ...string) ([]api.PackageInfo, error) {
-	cmd := exec.CommandContext(ctx, command, args...)
-
-	stdout, err := cmd.StdoutPipe()
-	if err != nil {
-		return nil, fmt.Errorf("failed to get stdout for %s command: %w", command, err)
-	}
-	cmd.Stderr = os.Stderr
-
-	if err := cmd.Start(); err != nil {
-		return nil, fmt.Errorf("failed to start %s command: %w", command, err)
-	}
-
+func parseQueryOutput(lines []string) []api.PackageInfo {
 	var infos []api.PackageInfo
-	scanner := bufio.NewScanner(stdout)
-	for scanner.Scan() {
-		line := strings.TrimSpace(scanner.Text())
+	for _, line := range lines {
+		line = strings.TrimSpace(line)
 		if strings.HasPrefix(line, "QQQ|") && strings.HasSuffix(line, "|YYY") {
 			line = strings.TrimPrefix(line, "QQQ|")
 			line = strings.TrimSuffix(line, "|YYY")
@@ -91,17 +84,7 @@ func runQueryCommand(ctx context.Context, command string, args ...string) ([]api
 			}
 		}
 	}
-
-	if err := scanner.Err(); err != nil {
-		_ = cmd.Wait()
-		return nil, fmt.Errorf("error reading %s output: %w", command, err)
-	}
-
-	if err := cmd.Wait(); err != nil {
-		return nil, fmt.Errorf("%s command failed: %w", command, err)
-	}
-
-	return infos, nil
+	return infos
 }
 
 func parseSourceName(sourceRpm string) string {
@@ -124,7 +107,7 @@ func (pm *pkgMgr) Install(ctx context.Context, packages []string, opts api.Insta
 	if len(packages) != 0 {
 		log.Logf("installing packages: %v", packages)
 		if !opts.DryRun {
-			return runDnfCommand(ctx, pm.Bin, append([]string{"install"}, packages...))
+			return exec.RunCommand(ctx, pm.Bin, append([]string{"install"}, packages...))
 		}
 	} else {
 		log.Warnf("no packages to install")
@@ -136,22 +119,10 @@ func (pm *pkgMgr) Remove(ctx context.Context, packages []string, opts api.Remove
 	if len(packages) != 0 {
 		log.Logf("removing packages: %v", packages)
 		if !opts.DryRun {
-			return runDnfCommand(ctx, pm.Bin, append([]string{"remove"}, packages...))
+			return exec.RunCommand(ctx, pm.Bin, append([]string{"remove"}, packages...))
 		}
 	} else {
 		log.Warnf("no packages to remove")
-	}
-	return nil
-}
-
-func runDnfCommand(ctx context.Context, command string, args []string) error {
-	cmd := exec.CommandContext(ctx, command, args...)
-	cmd.Stdin = os.Stdin
-	cmd.Stdout = os.Stdout
-	cmd.Stderr = os.Stderr
-
-	if err := cmd.Run(); err != nil {
-		return fmt.Errorf("%s command failed: %w", command, err)
 	}
 	return nil
 }

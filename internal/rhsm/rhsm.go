@@ -4,10 +4,10 @@ import (
 	"context"
 	"fmt"
 	"os"
-	"os/exec"
 	"strings"
 
 	"github.com/mizdebsk/rhel-drivers/internal/api"
+	"github.com/mizdebsk/rhel-drivers/internal/exec"
 	"github.com/mizdebsk/rhel-drivers/internal/log"
 	"github.com/mizdebsk/rhel-drivers/internal/sysinfo"
 )
@@ -79,11 +79,8 @@ func (rm *repoMgr) EnsureChannelsEnabled(ctx context.Context, channels []string)
 	}
 
 	log.Logf("running subscription-manager to enable repositories")
-	cmd := exec.CommandContext(ctx, rhsmExecPath, args...)
-	cmd.Stdout = os.Stdout
-	cmd.Stderr = os.Stderr
-
-	if err := cmd.Run(); err != nil {
+	err := exec.RunCommand(ctx, rhsmExecPath, args)
+	if err != nil {
 		return fmt.Errorf("failed to enable repositories: %w", err)
 	}
 
