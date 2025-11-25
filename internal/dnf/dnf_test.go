@@ -189,6 +189,16 @@ func TestDnf(t *testing.T) {
 				return err
 			},
 		},
+		{
+			name: "NewPackageManager",
+			testFunc: func(t *testing.T) error {
+				pm := NewPackageManager(mockExec)
+				if pm == nil {
+					t.Errorf("Expected PackageManager, got nil")
+				}
+				return nil
+			},
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
