@@ -78,29 +78,13 @@ func parseQueryOutput(lines []string) []api.PackageInfo {
 					Version:    fields[2],
 					Release:    fields[3],
 					Arch:       fields[4],
-					SourceName: parseSourceName(fields[5]),
+					SourceName: parseNameFromNVRA(fields[5]),
 					Repo:       fields[6],
 				})
 			}
 		}
 	}
 	return infos
-}
-
-func parseSourceName(sourceRpm string) string {
-	sourceRpm = strings.TrimSpace(sourceRpm)
-	if sourceRpm == "" {
-		return ""
-	}
-	s := strings.TrimSuffix(sourceRpm, ".rpm")
-	parts := strings.Split(s, "-")
-	if len(parts) < 2 {
-		return s
-	}
-	if len(parts) >= 3 {
-		return strings.Join(parts[:len(parts)-2], "-")
-	}
-	return parts[0]
 }
 
 func (pm *pkgMgr) Install(packages []string, opts api.InstallOptions) error {
