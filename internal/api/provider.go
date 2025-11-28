@@ -1,5 +1,7 @@
 package api
 
+//go:generate mockgen -source=provider.go -destination=../mocks/provider_mock.go -package=mocks
+
 type Provider interface {
 	GetID() string
 	GetName() string
