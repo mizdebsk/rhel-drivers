@@ -24,6 +24,6 @@ func (p PackageInfo) NEVRA() string {
 type PackageManager interface {
 	ListAvailablePackages() ([]PackageInfo, error)
 	ListInstalledPackages() ([]PackageInfo, error)
-	Install(packages []string, opts InstallOptions) error
-	Remove(packages []string, opts RemoveOptions) error
+	Install(packages []string) error
+	Remove(packages []string) error
 }

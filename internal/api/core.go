@@ -1,15 +1,5 @@
 package api
 
-type InstallOptions struct {
-	AutoDetect bool
-	DryRun     bool
-	Force      bool
-}
-type RemoveOptions struct {
-	DryRun bool
-	All    bool
-}
-
 type RepositoryManager interface {
 	EnsureRepositoriesEnabled() error
 }

@@ -87,26 +87,20 @@ func parseQueryOutput(lines []string) []api.PackageInfo {
 	return infos
 }
 
-func (pm *pkgMgr) Install(packages []string, opts api.InstallOptions) error {
-	if len(packages) != 0 {
-		log.Logf("installing packages: %v", packages)
-		if !opts.DryRun {
-			return pm.exec.Run(pm.bin, append([]string{"install"}, packages...))
-		}
-	} else {
+func (pm *pkgMgr) Install(packages []string) error {
+	if len(packages) == 0 {
 		log.Warnf("no packages to install")
+		return nil
 	}
-	return nil
+	log.Logf("installing packages: %v", packages)
+	return pm.exec.Run(pm.bin, append([]string{"install"}, packages...))
 }
 
-func (pm *pkgMgr) Remove(packages []string, opts api.RemoveOptions) error {
-	if len(packages) != 0 {
-		log.Logf("removing packages: %v", packages)
-		if !opts.DryRun {
-			return pm.exec.Run(pm.bin, append([]string{"remove"}, packages...))
-		}
-	} else {
+func (pm *pkgMgr) Remove(packages []string) error {
+	if len(packages) == 0 {
 		log.Warnf("no packages to remove")
+		return nil
 	}
-	return nil
+	log.Logf("removing packages: %v", packages)
+	return pm.exec.Run(pm.bin, append([]string{"remove"}, packages...))
 }

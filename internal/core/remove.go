@@ -7,52 +7,56 @@ import (
 	"github.com/mizdebsk/rhel-drivers/internal/log"
 )
 
-func Remove(deps api.CoreDeps, opts api.RemoveOptions, drivers []string) error {
+func RemoveSpecific(deps api.CoreDeps, drivers []string, dryRun bool) error {
 	var toRemove []api.DriverID
 
-	if len(drivers) == 0 && !opts.All {
+	if len(drivers) == 0 {
 		return fmt.Errorf("not specified what to remove")
 	}
-	if len(drivers) > 0 && opts.All {
-		return fmt.Errorf("both --all and specific drivers specified")
-	}
-	if opts.All {
+outer:
+	for _, driverStr := range drivers {
+		driver, err := parseDriverID(driverStr)
+		if err != nil {
+			return fmt.Errorf("invalid driver ID %q: %w", driverStr, err)
+		}
 		for _, provider := range deps.Providers {
-			installed, err := provider.ListInstalled()
-			if err != nil {
-				return fmt.Errorf("failed to list installed %s drivers: %w", provider.GetName(), err)
-			}
-			toRemove = append(toRemove, installed...)
-		}
-		if len(toRemove) == 0 {
-			return fmt.Errorf("not found any installed drivers to remove")
-		}
-	} else {
-	outer2:
-		for _, driverStr := range drivers {
-			driver, err := parseDriverID(driverStr)
-			if err != nil {
-				return fmt.Errorf("invalid driver ID %q: %w", driverStr, err)
-			}
-			for _, provider := range deps.Providers {
-				provID := provider.GetID()
-				if driver.ProviderID == provID {
-					installed, err := provider.ListInstalled()
-					if err != nil {
-						return fmt.Errorf("failed to list installed %s drivers: %w", provID, err)
-					}
-					for _, inst := range installed {
-						if inst.Version == driver.Version {
-							toRemove = append(toRemove, inst)
-							continue outer2
-						}
-					}
-					return fmt.Errorf("driver %s version %s is NOT installed", provID, driver.Version)
+			provID := provider.GetID()
+			if driver.ProviderID == provID {
+				installed, err := provider.ListInstalled()
+				if err != nil {
+					return fmt.Errorf("failed to list installed %s drivers: %w", provID, err)
 				}
+				for _, inst := range installed {
+					if inst.Version == driver.Version {
+						toRemove = append(toRemove, inst)
+						continue outer
+					}
+				}
+				return fmt.Errorf("driver %s version %s is NOT installed", provID, driver.Version)
 			}
-			return fmt.Errorf("unknown provider for driver: %s", driver)
 		}
+		return fmt.Errorf("unknown provider for driver: %s", driver)
 	}
+	return doRemove(deps, toRemove, dryRun)
+}
+
+func RemoveAll(deps api.CoreDeps, dryRun bool) error {
+	var toRemove []api.DriverID
+
+	for _, provider := range deps.Providers {
+		installed, err := provider.ListInstalled()
+		if err != nil {
+			return fmt.Errorf("failed to list installed %s drivers: %w", provider.GetName(), err)
+		}
+		toRemove = append(toRemove, installed...)
+	}
+	if len(toRemove) == 0 {
+		return fmt.Errorf("not found any installed drivers to remove")
+	}
+	return doRemove(deps, toRemove, dryRun)
+}
+
+func doRemove(deps api.CoreDeps, toRemove []api.DriverID, dryRun bool) error {
 	var allPkgs []string
 	for _, provider := range deps.Providers {
 		provID := provider.GetID()
@@ -76,8 +80,10 @@ func Remove(deps api.CoreDeps, opts api.RemoveOptions, drivers []string) error {
 	for _, pkg := range allPkgs {
 		log.Logf("package will be installed: %v", pkg)
 	}
-	if err := deps.PackageManager.Remove(allPkgs, opts); err != nil {
-		return fmt.Errorf("failed to remove pacakges: %w", err)
+	if !dryRun {
+		if err := deps.PackageManager.Remove(allPkgs); err != nil {
+			return fmt.Errorf("failed to remove pacakges: %w", err)
+		}
 	}
 	return nil
 }

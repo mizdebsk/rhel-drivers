@@ -66,9 +66,9 @@ func printVersion(version string) {
 
 func newInstallCmd(deps api.CoreDeps) *cobra.Command {
 	var (
-		flagAutoDetect bool
-		flagDryRun     bool
-		flagForce      bool
+		autoDetect bool
+		dryRun     bool
+		force      bool
 	)
 
 	cmd := &cobra.Command{
@@ -77,34 +77,34 @@ func newInstallCmd(deps api.CoreDeps) *cobra.Command {
 		Aliases: []string{"in"},
 		Args:    cobra.ArbitraryArgs,
 		RunE: func(cmd *cobra.Command, args []string) error {
-			opts := api.InstallOptions{
-				AutoDetect: flagAutoDetect,
-				DryRun:     flagDryRun,
-				Force:      flagForce,
+			if autoDetect {
+				if len(args) > 0 {
+					return fmt.Errorf("both --auto-detect and specific drivers given")
+				}
+				if force {
+					return fmt.Errorf("both --auto-detect and --force were specified")
+				}
+				return core.InstallAutoDetect(deps, dryRun)
+			} else {
+				if len(args) == 0 {
+					return fmt.Errorf("not specified what to install (use --auto-detect or provide drivers)")
+				}
+				return core.InstallSpecific(deps, args, dryRun, force)
 			}
-
-			if len(args) == 0 && !flagAutoDetect {
-				return fmt.Errorf("not specified what to install (use --auto-detect or provide drivers)")
-			}
-			if len(args) > 0 && flagAutoDetect {
-				return fmt.Errorf("both --auto-detect and specific drivers given")
-			}
-
-			return core.Install(deps, opts, args)
 		},
 	}
 
-	cmd.Flags().BoolVar(&flagAutoDetect, "auto-detect", false, "Auto-detect drivers to install")
-	cmd.Flags().BoolVar(&flagDryRun, "dry-run", false, "Show what would happen, don't change anything")
-	cmd.Flags().BoolVar(&flagForce, "force", false, "Force install (ignore checks)")
+	cmd.Flags().BoolVar(&autoDetect, "auto-detect", false, "Auto-detect drivers to install")
+	cmd.Flags().BoolVar(&dryRun, "dry-run", false, "Show what would happen, don't change anything")
+	cmd.Flags().BoolVar(&force, "force", false, "Force install (ignore checks)")
 
 	return cmd
 }
 
 func newRemoveCmd(deps api.CoreDeps) *cobra.Command {
 	var (
-		flagDryRun bool
-		flagAll    bool
+		dryRun bool
+		all    bool
 	)
 
 	cmd := &cobra.Command{
@@ -113,24 +113,22 @@ func newRemoveCmd(deps api.CoreDeps) *cobra.Command {
 		Aliases: []string{"rm"},
 		Args:    cobra.ArbitraryArgs,
 		RunE: func(cmd *cobra.Command, args []string) error {
-			opts := api.RemoveOptions{
-				DryRun: flagDryRun,
-				All:    flagAll,
+			if all {
+				if len(args) > 0 {
+					return fmt.Errorf("both --all and specific drivers given")
+				}
+				return core.RemoveAll(deps, dryRun)
+			} else {
+				if len(args) == 0 {
+					return fmt.Errorf("not specified what to remove (use --all or provide drivers)")
+				}
+				return core.RemoveSpecific(deps, args, dryRun)
 			}
-
-			if len(args) == 0 && !flagAll {
-				return fmt.Errorf("not specified what to remove (use --all or provide drivers)")
-			}
-			if len(args) > 0 && flagAll {
-				return fmt.Errorf("both --all and specific drivers given")
-			}
-
-			return core.Remove(deps, opts, args)
 		},
 	}
 
-	cmd.Flags().BoolVar(&flagDryRun, "dry-run", false, "Show what would happen, don't change anything")
-	cmd.Flags().BoolVar(&flagAll, "all", false, "Remove all installed drivers")
+	cmd.Flags().BoolVar(&dryRun, "dry-run", false, "Show what would happen, don't change anything")
+	cmd.Flags().BoolVar(&all, "all", false, "Remove all installed drivers")
 
 	return cmd
 }
