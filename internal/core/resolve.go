@@ -8,8 +8,8 @@ import (
 )
 
 func parseDriverID(input string) (api.DriverID, error) {
-	parts := strings.SplitN(input, ":", 2)
-	if len(parts) != 2 || parts[0] == "" {
+	parts := strings.Split(input, ":")
+	if len(parts) != 2 || parts[0] == "" || parts[1] == "" {
 		return api.DriverID{}, fmt.Errorf("invalid driver ID format: %q (expected 'vendor:version')", input)
 	}
 	return api.DriverID{
@@ -25,7 +25,7 @@ func lookupProvider(deps api.CoreDeps, driver api.DriverID) (api.Provider, error
 			return provider, nil
 		}
 	}
-	return nil, fmt.Errorf("unknown provider for driver: %s", driver)
+	return nil, fmt.Errorf("unknown provider for driver: %s:%s", driver.ProviderID, driver.Version)
 }
 
 func resolveDriver(deps api.CoreDeps, driverStr string) (api.DriverID, api.Provider, error) {
