@@ -11,9 +11,6 @@ func List(deps api.CoreDeps, listInst, listAvail, hwdetect bool) ([]api.DriverSt
 	var result []api.DriverStatus
 
 	if listAvail {
-		if deps.RepositoryManager == nil {
-			return result, fmt.Errorf("no RepositoryManager provided")
-		}
 		if err := deps.RepositoryManager.EnsureRepositoriesEnabled(); err != nil {
 			return result, fmt.Errorf("failed to verify/enable repositories: %w", err)
 		}

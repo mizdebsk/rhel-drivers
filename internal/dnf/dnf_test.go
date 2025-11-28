@@ -39,7 +39,7 @@ func TestDnf(t *testing.T) {
 				mockExec.EXPECT().
 					Run(dnfBin, []string{"install", "foo", "bar"}).
 					Return(nil)
-				return pm.Install([]string{"foo", "bar"}, api.InstallOptions{})
+				return pm.Install([]string{"foo", "bar"})
 			},
 		},
 		{
@@ -48,20 +48,14 @@ func TestDnf(t *testing.T) {
 				mockExec.EXPECT().
 					Run(dnfBin, []string{"install", "foo", "bar"}).
 					Return(fmt.Errorf("something went wrong"))
-				return pm.Install([]string{"foo", "bar"}, api.InstallOptions{})
+				return pm.Install([]string{"foo", "bar"})
 			},
 			expectErr: true,
 		},
 		{
 			name: "InstallNothing",
 			testFunc: func(t *testing.T) error {
-				return pm.Install([]string{}, api.InstallOptions{})
-			},
-		},
-		{
-			name: "InstallDryRun",
-			testFunc: func(t *testing.T) error {
-				return pm.Install([]string{"foo", "bar"}, api.InstallOptions{DryRun: true})
+				return pm.Install([]string{})
 			},
 		},
 		{
@@ -70,7 +64,7 @@ func TestDnf(t *testing.T) {
 				mockExec.EXPECT().
 					Run(dnfBin, []string{"remove", "foo", "bar"}).
 					Return(nil)
-				return pm.Remove([]string{"foo", "bar"}, api.RemoveOptions{})
+				return pm.Remove([]string{"foo", "bar"})
 			},
 		},
 		{
@@ -79,20 +73,14 @@ func TestDnf(t *testing.T) {
 				mockExec.EXPECT().
 					Run(dnfBin, []string{"remove", "foo", "bar"}).
 					Return(fmt.Errorf("something went wrong"))
-				return pm.Remove([]string{"foo", "bar"}, api.RemoveOptions{})
+				return pm.Remove([]string{"foo", "bar"})
 			},
 			expectErr: true,
 		},
 		{
 			name: "RemoveNothing",
 			testFunc: func(t *testing.T) error {
-				return pm.Remove([]string{}, api.RemoveOptions{})
-			},
-		},
-		{
-			name: "RemoveDryRun",
-			testFunc: func(t *testing.T) error {
-				return pm.Remove([]string{"foo", "bar"}, api.RemoveOptions{DryRun: true})
+				return pm.Remove([]string{})
 			},
 		},
 		{
