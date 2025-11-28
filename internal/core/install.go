@@ -20,38 +20,33 @@ func InstallSpecific(deps api.CoreDeps, drivers []string, dryRun, force bool) er
 
 outer:
 	for _, driverStr := range drivers {
-		driver, err := parseDriverID(driverStr)
+		driver, provider, err := resolveDriver(deps, driverStr)
 		if err != nil {
-			return fmt.Errorf("invalid driver ID %q: %w", driverStr, err)
+			return err
 		}
-		for _, provider := range deps.Providers {
-			if driver.ProviderID == provider.GetID() {
-				available, err := provider.ListAvailable()
-				if err != nil {
-					return fmt.Errorf("failed to list available %s drivers: %w", provider.GetName(), err)
-				}
-				for _, avail := range available {
-					if avail.Version == driver.Version {
-						if !force {
-							compat, err := provider.DetectHardware()
-							if err != nil {
-								log.Warnf("hardware detection failed for %s failed: %v", provider.GetName(), err)
-							} else if !compat {
-								return fmt.Errorf("no compatible %s hardware found", provider.GetName())
-							} else {
-								log.Infof("compatible hardware %s found", provider.GetName())
-							}
-						} else {
-							log.Infof("not checking for %s hardware compatibility in force mode", provider.GetName())
-						}
-						toInstall = append(toInstall, driver)
-						continue outer
+		available, err := provider.ListAvailable()
+		if err != nil {
+			return fmt.Errorf("failed to list available %s drivers: %w", provider.GetName(), err)
+		}
+		for _, avail := range available {
+			if avail.Version == driver.Version {
+				if !force {
+					compat, err := provider.DetectHardware()
+					if err != nil {
+						log.Warnf("hardware detection failed for %s failed: %v", provider.GetName(), err)
+					} else if !compat {
+						return fmt.Errorf("no compatible %s hardware found", provider.GetName())
+					} else {
+						log.Infof("compatible hardware %s found", provider.GetName())
 					}
+				} else {
+					log.Infof("not checking for %s hardware compatibility in force mode", provider.GetName())
 				}
-				return fmt.Errorf("%s driver version %s is NOT available", provider.GetName(), driver.Version)
+				toInstall = append(toInstall, driver)
+				continue outer
 			}
 		}
-		return fmt.Errorf("unknown provider for driver: %s", driver)
+		return fmt.Errorf("%s driver version %s is NOT available", provider.GetName(), driver.Version)
 	}
 
 	return doInstall(deps, toInstall, dryRun)

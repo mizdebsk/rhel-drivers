@@ -15,27 +15,21 @@ func RemoveSpecific(deps api.CoreDeps, drivers []string, dryRun bool) error {
 	}
 outer:
 	for _, driverStr := range drivers {
-		driver, err := parseDriverID(driverStr)
+		driver, provider, err := resolveDriver(deps, driverStr)
 		if err != nil {
-			return fmt.Errorf("invalid driver ID %q: %w", driverStr, err)
+			return err
 		}
-		for _, provider := range deps.Providers {
-			provID := provider.GetID()
-			if driver.ProviderID == provID {
-				installed, err := provider.ListInstalled()
-				if err != nil {
-					return fmt.Errorf("failed to list installed %s drivers: %w", provID, err)
-				}
-				for _, inst := range installed {
-					if inst.Version == driver.Version {
-						toRemove = append(toRemove, inst)
-						continue outer
-					}
-				}
-				return fmt.Errorf("driver %s version %s is NOT installed", provID, driver.Version)
+		installed, err := provider.ListInstalled()
+		if err != nil {
+			return fmt.Errorf("failed to list installed %s drivers: %w", provider.GetName(), err)
+		}
+		for _, inst := range installed {
+			if inst.Version == driver.Version {
+				toRemove = append(toRemove, inst)
+				continue outer
 			}
 		}
-		return fmt.Errorf("unknown provider for driver: %s", driver)
+		return fmt.Errorf("driver %s version %s is NOT installed", provider.GetName(), driver.Version)
 	}
 	return doRemove(deps, toRemove, dryRun)
 }
