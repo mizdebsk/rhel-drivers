@@ -1,9 +1,5 @@
 package api
 
-import (
-	"fmt"
-)
-
 type PackageInfo struct {
 	Name       string
 	Epoch      string
@@ -15,10 +11,11 @@ type PackageInfo struct {
 }
 
 func (p PackageInfo) NEVRA() string {
+	epochStr := ""
 	if p.Epoch != "" && p.Epoch != "0" {
-		return fmt.Sprintf("%s-%s:%s-%s.%s", p.Name, p.Epoch, p.Version, p.Release, p.Arch)
+		epochStr = p.Epoch + ":"
 	}
-	return fmt.Sprintf("%s-%s-%s.%s", p.Name, p.Version, p.Release, p.Arch)
+	return p.Name + "-" + epochStr + p.Version + "-" + p.Release + "." + p.Arch
 }
 
 type PackageManager interface {
