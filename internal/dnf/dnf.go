@@ -87,16 +87,21 @@ func parseQueryOutput(lines []string) []api.PackageInfo {
 	return infos
 }
 
-func (pm *pkgMgr) Install(packages []string) error {
-	return pm.runTransaction("install", packages)
+func (pm *pkgMgr) Install(packages []string, dryRun, batchMode bool) error {
+	return pm.runTransaction("install", packages, dryRun, batchMode)
 }
 
-func (pm *pkgMgr) Remove(packages []string) error {
-	return pm.runTransaction("remove", packages)
+func (pm *pkgMgr) Remove(packages []string, dryRun, batchMode bool) error {
+	return pm.runTransaction("remove", packages, dryRun, batchMode)
 }
 
-func (pm *pkgMgr) runTransaction(operation string, packages []string) error {
+func (pm *pkgMgr) runTransaction(operation string, packages []string, dryRun, batchMode bool) error {
 	var args []string
+	if dryRun {
+		args = append(args, "--assumeno")
+	} else if batchMode {
+		args = append(args, "-y")
+	}
 	args = append(args, operation)
 	if len(packages) == 0 {
 		log.Warnf("no packages to %s", operation)

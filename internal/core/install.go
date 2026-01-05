@@ -115,10 +115,8 @@ func doInstall(deps api.CoreDeps, toInstall []api.DriverID, dryRun bool) error {
 	for _, pkg := range allPkgs {
 		log.Logf("package will be installed: %v", pkg)
 	}
-	if !dryRun {
-		if err := deps.PackageManager.Install(allPkgs); err != nil {
-			return fmt.Errorf("failed to install pacakges: %w", err)
-		}
+	if err := deps.PackageManager.Install(allPkgs, dryRun, false); err != nil {
+		return fmt.Errorf("failed to install pacakges: %w", err)
 	}
 	return nil
 }

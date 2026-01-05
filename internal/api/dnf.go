@@ -1,5 +1,12 @@
 package api
 
+type PackageManager interface {
+	ListAvailablePackages() ([]PackageInfo, error)
+	ListInstalledPackages() ([]PackageInfo, error)
+	Install(packages []string, dryRun, batchMode bool) error
+	Remove(packages []string, dryRun, batchMode bool) error
+}
+
 type PackageInfo struct {
 	Name       string
 	Epoch      string
@@ -16,11 +23,4 @@ func (p PackageInfo) NEVRA() string {
 		epochStr = p.Epoch + ":"
 	}
 	return p.Name + "-" + epochStr + p.Version + "-" + p.Release + "." + p.Arch
-}
-
-type PackageManager interface {
-	ListAvailablePackages() ([]PackageInfo, error)
-	ListInstalledPackages() ([]PackageInfo, error)
-	Install(packages []string) error
-	Remove(packages []string) error
 }

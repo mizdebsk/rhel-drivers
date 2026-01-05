@@ -39,7 +39,7 @@ func TestDnf(t *testing.T) {
 				mockExec.EXPECT().
 					Run(dnfBin, []string{"oper", "foo", "bar"}).
 					Return(nil)
-				return pm.runTransaction("oper", []string{"foo", "bar"})
+				return pm.runTransaction("oper", []string{"foo", "bar"}, false, false)
 			},
 		},
 		{
@@ -48,14 +48,41 @@ func TestDnf(t *testing.T) {
 				mockExec.EXPECT().
 					Run(dnfBin, []string{"oper", "foo", "bar"}).
 					Return(fmt.Errorf("something went wrong"))
-				return pm.runTransaction("oper", []string{"foo", "bar"})
+				return pm.runTransaction("oper", []string{"foo", "bar"}, false, false)
 			},
 			expectErr: true,
 		},
 		{
 			name: "TransactionNothing",
 			testFunc: func(t *testing.T) error {
-				return pm.runTransaction("oper", []string{})
+				return pm.runTransaction("oper", []string{}, false, false)
+			},
+		},
+		{
+			name: "TransactionDryRun",
+			testFunc: func(t *testing.T) error {
+				mockExec.EXPECT().
+					Run(dnfBin, []string{"--assumeno", "oper", "foo", "bar"}).
+					Return(nil)
+				return pm.runTransaction("oper", []string{"foo", "bar"}, true, false)
+			},
+		},
+		{
+			name: "TransactionBatchMode",
+			testFunc: func(t *testing.T) error {
+				mockExec.EXPECT().
+					Run(dnfBin, []string{"-y", "oper", "foo", "bar"}).
+					Return(nil)
+				return pm.runTransaction("oper", []string{"foo", "bar"}, false, true)
+			},
+		},
+		{
+			name: "TransactionDryRunAndBatchMode",
+			testFunc: func(t *testing.T) error {
+				mockExec.EXPECT().
+					Run(dnfBin, []string{"--assumeno", "oper", "foo", "bar"}).
+					Return(nil)
+				return pm.runTransaction("oper", []string{"foo", "bar"}, true, true)
 			},
 		},
 		{
@@ -64,7 +91,7 @@ func TestDnf(t *testing.T) {
 				mockExec.EXPECT().
 					Run(dnfBin, []string{"install", "foo", "bar"}).
 					Return(nil)
-				return pm.Install([]string{"foo", "bar"})
+				return pm.Install([]string{"foo", "bar"}, false, false)
 			},
 		},
 		{
@@ -73,7 +100,7 @@ func TestDnf(t *testing.T) {
 				mockExec.EXPECT().
 					Run(dnfBin, []string{"remove", "foo", "bar"}).
 					Return(nil)
-				return pm.Remove([]string{"foo", "bar"})
+				return pm.Remove([]string{"foo", "bar"}, false, false)
 			},
 		},
 		{
