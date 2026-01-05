@@ -59,25 +59,25 @@ func TestDnf(t *testing.T) {
 			},
 		},
 		{
-			name: "TransactionDryRun",
-			testFunc: func(t *testing.T) error {
-				mockExec.EXPECT().
-					Run(dnfBin, []string{"--assumeno", "oper", "foo", "bar"}).
-					Return(nil)
-				return pm.runTransaction("oper", []string{"foo", "bar"}, true, false)
-			},
-		},
-		{
 			name: "TransactionBatchMode",
 			testFunc: func(t *testing.T) error {
 				mockExec.EXPECT().
 					Run(dnfBin, []string{"-y", "oper", "foo", "bar"}).
 					Return(nil)
+				return pm.runTransaction("oper", []string{"foo", "bar"}, true, false)
+			},
+		},
+		{
+			name: "TransactionDryRun",
+			testFunc: func(t *testing.T) error {
+				mockExec.EXPECT().
+					Run(dnfBin, []string{"--assumeno", "oper", "foo", "bar"}).
+					Return(nil)
 				return pm.runTransaction("oper", []string{"foo", "bar"}, false, true)
 			},
 		},
 		{
-			name: "TransactionDryRunAndBatchMode",
+			name: "TransactionBatchAndDry",
 			testFunc: func(t *testing.T) error {
 				mockExec.EXPECT().
 					Run(dnfBin, []string{"--assumeno", "oper", "foo", "bar"}).

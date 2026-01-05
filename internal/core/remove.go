@@ -74,7 +74,7 @@ func doRemove(deps api.CoreDeps, toRemove []api.DriverID, batchMode, dryRun bool
 	for _, pkg := range allPkgs {
 		log.Logf("package will be removed: %v", pkg)
 	}
-	if err := deps.PackageManager.Remove(allPkgs, dryRun, batchMode); err != nil {
+	if err := deps.PackageManager.Remove(allPkgs, batchMode, dryRun); err != nil {
 		return fmt.Errorf("failed to remove pacakges: %w", err)
 	}
 	return nil

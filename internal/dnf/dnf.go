@@ -87,15 +87,15 @@ func parseQueryOutput(lines []string) []api.PackageInfo {
 	return infos
 }
 
-func (pm *pkgMgr) Install(packages []string, dryRun, batchMode bool) error {
-	return pm.runTransaction("install", packages, dryRun, batchMode)
+func (pm *pkgMgr) Install(packages []string, batchMode, dryRun bool) error {
+	return pm.runTransaction("install", packages, batchMode, dryRun)
 }
 
-func (pm *pkgMgr) Remove(packages []string, dryRun, batchMode bool) error {
-	return pm.runTransaction("remove", packages, dryRun, batchMode)
+func (pm *pkgMgr) Remove(packages []string, batchMode, dryRun bool) error {
+	return pm.runTransaction("remove", packages, batchMode, dryRun)
 }
 
-func (pm *pkgMgr) runTransaction(operation string, packages []string, dryRun, batchMode bool) error {
+func (pm *pkgMgr) runTransaction(operation string, packages []string, batchMode, dryRun bool) error {
 	var args []string
 	if dryRun {
 		args = append(args, "--assumeno")
