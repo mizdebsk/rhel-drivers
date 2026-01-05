@@ -72,7 +72,7 @@ func doRemove(deps api.CoreDeps, toRemove []api.DriverID, dryRun bool) error {
 		return fmt.Errorf("nothing to remove")
 	}
 	for _, pkg := range allPkgs {
-		log.Logf("package will be installed: %v", pkg)
+		log.Logf("package will be removed: %v", pkg)
 	}
 	if !dryRun {
 		if err := deps.PackageManager.Remove(allPkgs); err != nil {
