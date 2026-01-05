@@ -34,6 +34,31 @@ func TestDnf(t *testing.T) {
 		expectErr bool
 	}{
 		{
+			name: "TransactionSuccess",
+			testFunc: func(t *testing.T) error {
+				mockExec.EXPECT().
+					Run(dnfBin, []string{"oper", "foo", "bar"}).
+					Return(nil)
+				return pm.runTransaction("oper", []string{"foo", "bar"})
+			},
+		},
+		{
+			name: "TransactionFailure",
+			testFunc: func(t *testing.T) error {
+				mockExec.EXPECT().
+					Run(dnfBin, []string{"oper", "foo", "bar"}).
+					Return(fmt.Errorf("something went wrong"))
+				return pm.runTransaction("oper", []string{"foo", "bar"})
+			},
+			expectErr: true,
+		},
+		{
+			name: "TransactionNothing",
+			testFunc: func(t *testing.T) error {
+				return pm.runTransaction("oper", []string{})
+			},
+		},
+		{
 			name: "InstallSuccess",
 			testFunc: func(t *testing.T) error {
 				mockExec.EXPECT().
@@ -43,44 +68,12 @@ func TestDnf(t *testing.T) {
 			},
 		},
 		{
-			name: "InstallFailure",
-			testFunc: func(t *testing.T) error {
-				mockExec.EXPECT().
-					Run(dnfBin, []string{"install", "foo", "bar"}).
-					Return(fmt.Errorf("something went wrong"))
-				return pm.Install([]string{"foo", "bar"})
-			},
-			expectErr: true,
-		},
-		{
-			name: "InstallNothing",
-			testFunc: func(t *testing.T) error {
-				return pm.Install([]string{})
-			},
-		},
-		{
 			name: "RemoveSuccess",
 			testFunc: func(t *testing.T) error {
 				mockExec.EXPECT().
 					Run(dnfBin, []string{"remove", "foo", "bar"}).
 					Return(nil)
 				return pm.Remove([]string{"foo", "bar"})
-			},
-		},
-		{
-			name: "RemoveFailure",
-			testFunc: func(t *testing.T) error {
-				mockExec.EXPECT().
-					Run(dnfBin, []string{"remove", "foo", "bar"}).
-					Return(fmt.Errorf("something went wrong"))
-				return pm.Remove([]string{"foo", "bar"})
-			},
-			expectErr: true,
-		},
-		{
-			name: "RemoveNothing",
-			testFunc: func(t *testing.T) error {
-				return pm.Remove([]string{})
 			},
 		},
 		{
