@@ -3,8 +3,8 @@ package api
 type PackageManager interface {
 	ListAvailablePackages() ([]PackageInfo, error)
 	ListInstalledPackages() ([]PackageInfo, error)
-	Install(packages []string, dryRun, batchMode bool) error
-	Remove(packages []string, dryRun, batchMode bool) error
+	Install(packages []string, batchMode, dryRun bool) error
+	Remove(packages []string, batchMode, dryRun bool) error
 }
 
 type PackageInfo struct {
