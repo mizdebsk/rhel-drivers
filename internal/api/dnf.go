@@ -1,5 +1,7 @@
 package api
 
+//go:generate mockgen -source=dnf.go -destination=../mocks/dnf_mock.go -package=mocks
+
 type PackageManager interface {
 	ListAvailablePackages() ([]PackageInfo, error)
 	ListInstalledPackages() ([]PackageInfo, error)
