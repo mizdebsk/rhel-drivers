@@ -57,6 +57,8 @@ func packageSetVersioned(all []api.PackageInfo, version string, latest bool) []s
 	names := []string{
 		"nvidia-driver",
 		"nvidia-driver-cuda",
+		"nvidia-fabricmanager",
+		"nvidia-fabric-manager-devel",
 	}
 	for _, name := range names {
 		selectedPkgs := selectPackagesByNameVersion(all, name, version, latest)
@@ -73,8 +75,6 @@ func packageSetStatic() []string {
 		"dnf-plugin-nvidia",
 		"libnccl-devel",
 		"libnccl-static",
-		"nvidia-fabricmanager",
-		"nvidia-fabric-manager-devel",
 	}
 }
 
