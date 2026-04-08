@@ -7,6 +7,13 @@ import (
 	"github.com/mizdebsk/radii/internal/log"
 )
 
+const (
+	variantLatest = "latest"
+
+	pkgKmodAmdgpu = "kmod-amdgpu"
+	pkgRocm       = "rocm-devel"
+)
+
 type prov struct {
 	PM api.PackageManager
 }
@@ -26,11 +33,54 @@ func NewProvider(pm api.PackageManager) api.Provider {
 	}
 }
 
+func combinedPackages() []string {
+	return []string{pkgKmodAmdgpu, pkgRocm}
+}
+
+func hasAnyPackage(all []api.PackageInfo, names ...string) bool {
+	for _, name := range names {
+		if hasPackage(all, name) {
+			return true
+		}
+	}
+	return false
+}
+
+func hasAllPackages(all []api.PackageInfo, names ...string) bool {
+	for _, name := range names {
+		if !hasPackage(all, name) {
+			return false
+		}
+	}
+	return true
+}
+
+func validateDrivers(drivers []api.DriverID, providerName string) error {
+	for _, d := range drivers {
+		if d.Version != variantLatest {
+			return fmt.Errorf("unknown %s driver variant: %s", providerName, d.Version)
+		}
+	}
+	return nil
+}
+
+func hasPackage(all []api.PackageInfo, name string) bool {
+	for _, pkg := range all {
+		if pkg.Name == name {
+			return true
+		}
+	}
+	return false
+}
+
 func (p *prov) Install(drivers []api.DriverID) ([]string, error) {
 	if len(drivers) == 0 {
 		return []string{}, nil
 	}
-	return []string{"kmod-amdgpu"}, nil
+	if err := validateDrivers(drivers, p.GetName()); err != nil {
+		return nil, err
+	}
+	return combinedPackages(), nil
 }
 
 func (p *prov) ListInstalled() ([]api.DriverID, error) {
@@ -38,28 +88,27 @@ func (p *prov) ListInstalled() ([]api.DriverID, error) {
 	if err != nil {
 		return []api.DriverID{}, err
 	}
-	var drivers []api.PackageInfo
-	for _, pkg := range all {
-		if pkg.Name == "kmod-amdgpu" {
-			drivers = append(drivers, pkg)
-		}
-	}
-	if len(drivers) == 0 {
-		log.Logf("%s driver is currently NOT installed", p.GetName())
+	packages := combinedPackages()
+	if !hasAnyPackage(all, packages...) {
+		log.Logf("%s drivers are currently NOT installed", p.GetName())
 		return []api.DriverID{}, nil
 	}
-	log.Logf("%s driver is currently installed", p.GetName())
-	return []api.DriverID{{
-		ProviderID: p.GetID(),
-		Version:    "latest",
-	}}, nil
+	if !hasAllPackages(all, packages...) {
+		log.Warnf("%s drivers are partially installed", p.GetName())
+		return []api.DriverID{{ProviderID: p.GetID(), Version: variantLatest}}, nil
+	}
+	log.Logf("%s drivers are currently installed", p.GetName())
+	return []api.DriverID{{ProviderID: p.GetID(), Version: variantLatest}}, nil
 }
 
 func (p *prov) Remove(drivers []api.DriverID) ([]string, error) {
 	if len(drivers) == 0 {
 		return []string{}, nil
 	}
-	return []string{"kmod-amdgpu"}, nil
+	if err := validateDrivers(drivers, p.GetName()); err != nil {
+		return nil, err
+	}
+	return combinedPackages(), nil
 }
 
 func (p *prov) ListAvailable() ([]api.DriverID, error) {
@@ -67,22 +116,15 @@ func (p *prov) ListAvailable() ([]api.DriverID, error) {
 	if err != nil {
 		return []api.DriverID{}, err
 	}
-	var drivers []api.PackageInfo
-	for _, pkg := range all {
-		if pkg.Name == "kmod-amdgpu" {
-			drivers = append(drivers, pkg)
-		}
-	}
-	if len(drivers) == 0 {
-		log.Warnf("%s driver is currently NOT available", p.GetName())
+	if !hasAllPackages(all, combinedPackages()...) {
+		log.Warnf("%s drivers are currently NOT available", p.GetName())
 		return []api.DriverID{}, nil
 	}
-	return []api.DriverID{{
-		ProviderID: p.GetID(),
-		Version:    "latest",
-	}}, nil
+
+	return []api.DriverID{{ProviderID: p.GetID(), Version: variantLatest}}, nil
 }
 
 func (p *prov) DetectHardware() (bool, error) {
-	return false, fmt.Errorf("hardware detection for %s is not implemented", p.GetName())
+	detector := newAutoDetector()
+	return detector.Detect()
 }

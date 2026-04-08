@@ -227,6 +227,19 @@ func TestInstallAutoDetect(t *testing.T) {
 			},
 		},
 		{
+			name:      "AMDHardwareDetectedLatestInstallsKernelAndRocm",
+			expectErr: false,
+			setup: func(p *mocks.MockProvider, pm *mocks.MockPackageManager, rm *mocks.MockRepositoryManager) {
+				p.EXPECT().GetID().Return("amdgpu").AnyTimes()
+				p.EXPECT().GetName().Return("AMD GPU").AnyTimes()
+				p.EXPECT().DetectHardware().Return(true, nil)
+				p.EXPECT().ListAvailable().Return([]api.DriverID{{ProviderID: "amdgpu", Version: "latest"}}, nil)
+				rm.EXPECT().EnsureRepositoriesEnabled().Return(nil)
+				p.EXPECT().Install([]api.DriverID{{ProviderID: "amdgpu", Version: "latest"}}).Return([]string{"kmod-amdgpu", "rocm-devel"}, nil)
+				pm.EXPECT().Install([]string{"kmod-amdgpu", "rocm-devel"}, false, false).Return(nil)
+			},
+		},
+		{
 			name:      "RepositoryEnableFails",
 			expectErr: true,
 			setup: func(p *mocks.MockProvider, pm *mocks.MockPackageManager, rm *mocks.MockRepositoryManager) {
