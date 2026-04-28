@@ -1,6 +1,7 @@
 package amd
 
 import (
+	"fmt"
 	"os"
 	"path/filepath"
 	"reflect"
@@ -150,12 +151,9 @@ func TestIsCompatibleAMDHardware_Found(t *testing.T) {
 			name:  "display class real hardware sample",
 			modal: "pci:v00001002d0000163Fsv00001002sd00000123bc03sc00i00",
 		},
-		// Synthetic bc12 sample for now.
-		// TODO: Replace with a real sample using machine with MI3XX:
-		// grep -H -E '^pci:v00001002.*bc(03|12)' /sys/bus/pci/devices/*/modalias 2>/dev/null
 		{
-			name:  "accelerator class",
-			modal: "pci:v00001002d00007441sv00001002sd00000000bc12sc00i00",
+			name:  "accelerator class MI300X real hardware sample",
+			modal: "pci:v00001002d000074A1sv00001002sd000074A1bc12sc00i00",
 		},
 	}
 
@@ -210,10 +208,38 @@ func TestDetect_WithCompatibleSysfs(t *testing.T) {
 	}
 	if err := os.WriteFile(
 		filepath.Join(root, "pci0000:00", "0000:00:01.0", "modalias"),
-		[]byte("pci:v00001002d00007440sv00001002sd00000000bc12sc00i00\n"),
+		[]byte("pci:v00001002d000074A1sv00001002sd000074A1bc12sc00i00\n"),
 		0o644,
 	); err != nil {
 		t.Fatalf("WriteFile() error = %v", err)
+	}
+
+	d := newAutoDetector()
+	d.modaliasRoot = root
+
+	found, err := d.Detect()
+	if err != nil {
+		t.Fatalf("Detect() error = %v", err)
+	}
+	if !found {
+		t.Fatalf("Detect() = %v, want true", found)
+	}
+}
+
+func TestDetect_WithEightMI300XModaliases(t *testing.T) {
+	root := t.TempDir()
+	for i := range 8 {
+		dir := filepath.Join(root, "pci0000:00", fmt.Sprintf("0000:%02x:00.0", i+1))
+		if err := os.MkdirAll(dir, 0o755); err != nil {
+			t.Fatalf("MkdirAll() error = %v", err)
+		}
+		if err := os.WriteFile(
+			filepath.Join(dir, "modalias"),
+			[]byte("pci:v00001002d000074A1sv00001002sd000074A1bc12sc00i00\n"),
+			0o644,
+		); err != nil {
+			t.Fatalf("WriteFile() error = %v", err)
+		}
 	}
 
 	d := newAutoDetector()
