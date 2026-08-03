@@ -85,7 +85,7 @@ func (rm *repoMgr) ensureChannelsEnabled(channels []string) error {
 	log.Logf("running subscription-manager to enable repositories")
 	err := rm.executor.Run(rm.rhsmExecPath, args)
 	if err != nil {
-		return fmt.Errorf("failed to enable repositories: %w", err)
+		return fmt.Errorf("failed to enable repositories, please ensure the system is registered and subscribed (see https://access.redhat.com/solutions/253273): %w", err)
 	}
 
 	log.Logf("repositories were enabled successfully")
