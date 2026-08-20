@@ -86,7 +86,7 @@ func TestInstallSpecific(t *testing.T) {
 				p.EXPECT().ListAvailable().Return([]api.DriverID{
 					{ProviderID: "nvidia", Version: "570.86.16"},
 				}, nil)
-				rm.EXPECT().EnsureRepositoriesEnabled().Return(nil)
+				rm.EXPECT().EnsureRepositoriesEnabled(gomock.Any()).Return(nil)
 				p.EXPECT().Install([]api.DriverID{{ProviderID: "nvidia", Version: "570.86.16"}}).Return([]string{"nvidia-driver"}, nil)
 				pm.EXPECT().Install([]string{"nvidia-driver"}, false, false).Return(nil)
 			},
@@ -102,7 +102,7 @@ func TestInstallSpecific(t *testing.T) {
 					{ProviderID: "nvidia", Version: "570.86.16"},
 				}, nil)
 				p.EXPECT().DetectHardware().Return(true, nil)
-				rm.EXPECT().EnsureRepositoriesEnabled().Return(nil)
+				rm.EXPECT().EnsureRepositoriesEnabled(gomock.Any()).Return(nil)
 				p.EXPECT().Install([]api.DriverID{{ProviderID: "nvidia", Version: "570.86.16"}}).Return([]string{"nvidia-driver"}, nil)
 				pm.EXPECT().Install([]string{"nvidia-driver"}, false, false).Return(nil)
 			},
@@ -118,7 +118,7 @@ func TestInstallSpecific(t *testing.T) {
 					{ProviderID: "nvidia", Version: "570.86.16"},
 				}, nil)
 				p.EXPECT().DetectHardware().Return(true, nil)
-				rm.EXPECT().EnsureRepositoriesEnabled().Return(fmt.Errorf("repo enable failed"))
+				rm.EXPECT().EnsureRepositoriesEnabled(gomock.Any()).Return(fmt.Errorf("repo enable failed"))
 			},
 		},
 		{
@@ -132,7 +132,7 @@ func TestInstallSpecific(t *testing.T) {
 					{ProviderID: "nvidia", Version: "570.86.16"},
 				}, nil)
 				p.EXPECT().DetectHardware().Return(true, nil)
-				rm.EXPECT().EnsureRepositoriesEnabled().Return(nil)
+				rm.EXPECT().EnsureRepositoriesEnabled(gomock.Any()).Return(nil)
 				p.EXPECT().Install([]api.DriverID{{ProviderID: "nvidia", Version: "570.86.16"}}).Return(nil, fmt.Errorf("install failed"))
 			},
 		},
@@ -147,7 +147,7 @@ func TestInstallSpecific(t *testing.T) {
 					{ProviderID: "nvidia", Version: "570.86.16"},
 				}, nil)
 				p.EXPECT().DetectHardware().Return(true, nil)
-				rm.EXPECT().EnsureRepositoriesEnabled().Return(nil)
+				rm.EXPECT().EnsureRepositoriesEnabled(gomock.Any()).Return(nil)
 				p.EXPECT().Install([]api.DriverID{{ProviderID: "nvidia", Version: "570.86.16"}}).Return([]string{"nvidia-driver"}, nil)
 				pm.EXPECT().Install([]string{"nvidia-driver"}, false, false).Return(fmt.Errorf("dnf failed"))
 			},
@@ -221,7 +221,7 @@ func TestInstallAutoDetect(t *testing.T) {
 				p.EXPECT().ListAvailable().Return([]api.DriverID{
 					{ProviderID: "nvidia", Version: "570.86.16"},
 				}, nil)
-				rm.EXPECT().EnsureRepositoriesEnabled().Return(nil)
+				rm.EXPECT().EnsureRepositoriesEnabled(gomock.Any()).Return(nil)
 				p.EXPECT().Install([]api.DriverID{{ProviderID: "nvidia", Version: "570.86.16"}}).Return([]string{"nvidia-driver"}, nil)
 				pm.EXPECT().Install([]string{"nvidia-driver"}, false, false).Return(nil)
 			},
@@ -234,7 +234,7 @@ func TestInstallAutoDetect(t *testing.T) {
 				p.EXPECT().GetName().Return("AMD GPU").AnyTimes()
 				p.EXPECT().DetectHardware().Return(true, nil)
 				p.EXPECT().ListAvailable().Return([]api.DriverID{{ProviderID: "amdgpu", Version: "latest"}}, nil)
-				rm.EXPECT().EnsureRepositoriesEnabled().Return(nil)
+				rm.EXPECT().EnsureRepositoriesEnabled(gomock.Any()).Return(nil)
 				p.EXPECT().Install([]api.DriverID{{ProviderID: "amdgpu", Version: "latest"}}).Return([]string{"kmod-amdgpu", "rocm-devel"}, nil)
 				pm.EXPECT().Install([]string{"kmod-amdgpu", "rocm-devel"}, false, false).Return(nil)
 			},
@@ -249,7 +249,7 @@ func TestInstallAutoDetect(t *testing.T) {
 				p.EXPECT().ListAvailable().Return([]api.DriverID{
 					{ProviderID: "nvidia", Version: "570.86.16"},
 				}, nil)
-				rm.EXPECT().EnsureRepositoriesEnabled().Return(fmt.Errorf("repo error"))
+				rm.EXPECT().EnsureRepositoriesEnabled(gomock.Any()).Return(fmt.Errorf("repo error"))
 			},
 		},
 	}

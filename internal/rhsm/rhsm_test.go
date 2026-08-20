@@ -32,7 +32,7 @@ func TestRhsm(t *testing.T) {
 						"--enable", "rhel-5-for-sparc-supplementary-rpms",
 					}).
 					Return(nil)
-				return rm.EnsureRepositoriesEnabled()
+				return rm.EnsureRepositoriesEnabled(true)
 			},
 		},
 		{
@@ -48,7 +48,7 @@ func TestRhsm(t *testing.T) {
 						"--enable", "rhel-5-for-sparc-supplementary-rpms",
 					}).
 					Return(fmt.Errorf("hey, you don't have a valid subscription"))
-				return rm.EnsureRepositoriesEnabled()
+				return rm.EnsureRepositoriesEnabled(true)
 			},
 			expectErr: true,
 		},
@@ -56,7 +56,7 @@ func TestRhsm(t *testing.T) {
 			name:    "ReopsAlreadyEnabled",
 			sysInfo: sysinfo.SysInfo{IsRhel: true, OsVersion: 10, Arch: "x86_64"},
 			testFunc: func(t *testing.T) error {
-				return rm.EnsureRepositoriesEnabled()
+				return rm.EnsureRepositoriesEnabled(true)
 			},
 		},
 		{
@@ -64,13 +64,13 @@ func TestRhsm(t *testing.T) {
 			sysInfo: sysinfo.SysInfo{IsRhel: true},
 			testFunc: func(t *testing.T) error {
 				rm.rhsmExecPath = "testdata/rhsm-absent-xxx"
-				return rm.EnsureRepositoriesEnabled()
+				return rm.EnsureRepositoriesEnabled(true)
 			},
 		},
 		{
 			name: "NonRhelSystem",
 			testFunc: func(t *testing.T) error {
-				return rm.EnsureRepositoriesEnabled()
+				return rm.EnsureRepositoriesEnabled(true)
 			},
 		},
 	}

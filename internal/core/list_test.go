@@ -54,7 +54,7 @@ func TestList(t *testing.T) {
 			setup: func(p *mocks.MockProvider, rm *mocks.MockRepositoryManager) {
 				p.EXPECT().GetID().Return("nvidia").AnyTimes()
 				p.EXPECT().GetName().Return("NVIDIA").AnyTimes()
-				rm.EXPECT().EnsureRepositoriesEnabled().Return(nil)
+				rm.EXPECT().EnsureRepositoriesEnabled(gomock.Any()).Return(nil)
 				p.EXPECT().ListAvailable().Return([]api.DriverID{
 					{ProviderID: "nvidia", Version: "570.86.16"},
 				}, nil)
@@ -77,7 +77,7 @@ func TestList(t *testing.T) {
 			setup: func(p *mocks.MockProvider, rm *mocks.MockRepositoryManager) {
 				p.EXPECT().GetID().Return("nvidia").AnyTimes()
 				p.EXPECT().GetName().Return("NVIDIA").AnyTimes()
-				rm.EXPECT().EnsureRepositoriesEnabled().Return(nil)
+				rm.EXPECT().EnsureRepositoriesEnabled(gomock.Any()).Return(nil)
 				p.EXPECT().ListInstalled().Return([]api.DriverID{
 					{ProviderID: "nvidia", Version: "570.86.16"},
 				}, nil)
@@ -110,7 +110,7 @@ func TestList(t *testing.T) {
 				p.EXPECT().GetID().Return("nvidia").AnyTimes()
 				p.EXPECT().GetName().Return("NVIDIA").AnyTimes()
 				p.EXPECT().DetectHardware().Return(true, nil)
-				rm.EXPECT().EnsureRepositoriesEnabled().Return(nil)
+				rm.EXPECT().EnsureRepositoriesEnabled(gomock.Any()).Return(nil)
 				p.EXPECT().ListInstalled().Return([]api.DriverID{}, nil)
 				p.EXPECT().ListAvailable().Return([]api.DriverID{
 					{ProviderID: "nvidia", Version: "570.86.16"},
@@ -132,7 +132,7 @@ func TestList(t *testing.T) {
 			hwdetect:       false,
 			compatibleOnly: false,
 			setup: func(p *mocks.MockProvider, rm *mocks.MockRepositoryManager) {
-				rm.EXPECT().EnsureRepositoriesEnabled().Return(fmt.Errorf("repo error"))
+				rm.EXPECT().EnsureRepositoriesEnabled(gomock.Any()).Return(fmt.Errorf("repo error"))
 			},
 			expectErr: true,
 			expectLen: 0,
@@ -160,7 +160,7 @@ func TestList(t *testing.T) {
 			setup: func(p *mocks.MockProvider, rm *mocks.MockRepositoryManager) {
 				p.EXPECT().GetID().Return("nvidia").AnyTimes()
 				p.EXPECT().GetName().Return("NVIDIA").AnyTimes()
-				rm.EXPECT().EnsureRepositoriesEnabled().Return(nil)
+				rm.EXPECT().EnsureRepositoriesEnabled(gomock.Any()).Return(nil)
 				p.EXPECT().ListInstalled().Return([]api.DriverID{}, nil)
 				p.EXPECT().ListAvailable().Return(nil, fmt.Errorf("list failed"))
 			},
@@ -176,7 +176,7 @@ func TestList(t *testing.T) {
 			setup: func(p *mocks.MockProvider, rm *mocks.MockRepositoryManager) {
 				p.EXPECT().GetID().Return("nvidia").AnyTimes()
 				p.EXPECT().GetName().Return("NVIDIA").AnyTimes()
-				rm.EXPECT().EnsureRepositoriesEnabled().Return(nil)
+				rm.EXPECT().EnsureRepositoriesEnabled(gomock.Any()).Return(nil)
 				p.EXPECT().ListInstalled().Return([]api.DriverID{}, nil)
 				p.EXPECT().ListAvailable().Return([]api.DriverID{}, nil)
 			},
@@ -193,7 +193,7 @@ func TestList(t *testing.T) {
 				p.EXPECT().GetID().Return("nvidia").AnyTimes()
 				p.EXPECT().GetName().Return("NVIDIA").AnyTimes()
 				p.EXPECT().DetectHardware().Return(true, nil)
-				rm.EXPECT().EnsureRepositoriesEnabled().Return(nil)
+				rm.EXPECT().EnsureRepositoriesEnabled(gomock.Any()).Return(nil)
 				p.EXPECT().ListInstalled().Return([]api.DriverID{}, nil)
 				p.EXPECT().ListAvailable().Return([]api.DriverID{
 					{ProviderID: "nvidia", Version: "570"},
@@ -221,7 +221,7 @@ func TestList(t *testing.T) {
 				p.EXPECT().GetID().Return("nvidia").AnyTimes()
 				p.EXPECT().GetName().Return("NVIDIA").AnyTimes()
 				p.EXPECT().DetectHardware().Return(false, nil)
-				rm.EXPECT().EnsureRepositoriesEnabled().Return(nil)
+				rm.EXPECT().EnsureRepositoriesEnabled(gomock.Any()).Return(nil)
 				p.EXPECT().ListInstalled().Return([]api.DriverID{}, nil)
 				p.EXPECT().ListAvailable().Return([]api.DriverID{
 					{ProviderID: "nvidia", Version: "570"},

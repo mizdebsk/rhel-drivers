@@ -2,6 +2,7 @@ package core
 
 import (
 	"fmt"
+	"slices"
 
 	"github.com/mizdebsk/radii/internal/api"
 	"github.com/mizdebsk/radii/internal/log"
@@ -81,7 +82,10 @@ func InstallAutoDetect(deps api.CoreDeps, batchMode, dryRun bool) error {
 }
 
 func doInstall(deps api.CoreDeps, toInstall []api.DriverID, batchMode, dryRun bool) error {
-	if err := deps.RepositoryManager.EnsureRepositoriesEnabled(); err != nil {
+	needSupplementary := slices.ContainsFunc(toInstall, func(d api.DriverID) bool {
+		return d.ProviderID == "nvidia"
+	})
+	if err := deps.RepositoryManager.EnsureRepositoriesEnabled(needSupplementary); err != nil {
 		return fmt.Errorf("failed to verify/enable repositories: %w", err)
 	}
 	var allPkgs []string

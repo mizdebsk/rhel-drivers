@@ -33,12 +33,15 @@ func NewRepositoryManager(executor api.Executor, systemInfo sysinfo.SysInfo) api
 	}
 }
 
-func (rm *repoMgr) EnsureRepositoriesEnabled() error {
+func (rm *repoMgr) EnsureRepositoriesEnabled(needSupplementary bool) error {
 	if rm.systemInfo.IsRhel {
 		log.Logf("detected RHEL %d", rm.systemInfo.OsVersion)
 		if rm.subscriptionManagerPresent() {
 			log.Logf("Subscription Manager is present")
-			channels := []string{"BaseOS", "AppStream", "Extensions", "Supplementary"}
+			channels := []string{"BaseOS", "AppStream", "Extensions"}
+			if needSupplementary {
+				channels = append(channels, "Supplementary")
+			}
 			return rm.ensureChannelsEnabled(channels)
 		} else {
 			log.Warnf("Subscription Manager is absent.")
