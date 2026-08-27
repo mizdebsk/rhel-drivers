@@ -4,6 +4,7 @@ package api
 
 type RepositoryManager interface {
 	EnsureRepositoriesEnabled(needSupplementary bool) error
+	GetRepoIDs(needSupplementary bool) ([]string, error)
 }
 
 type DriverID struct {

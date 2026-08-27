@@ -13,7 +13,10 @@ import (
 const (
 	defaultRedhatRepoPath = "/etc/yum.repos.d/redhat.repo"
 	defaultRhsmExecPath   = "/usr/sbin/subscription-manager"
+	supplementaryChannel  = "Supplementary"
 )
+
+var baseChannels = []string{"BaseOS", "AppStream", "Extensions"}
 
 type repoMgr struct {
 	systemInfo     sysinfo.SysInfo
@@ -33,16 +36,36 @@ func NewRepositoryManager(executor api.Executor, systemInfo sysinfo.SysInfo) api
 	}
 }
 
+func (rm *repoMgr) getChannels(needSupplementary bool) []string {
+	channels := append([]string{}, baseChannels...)
+	if needSupplementary {
+		channels = append(channels, supplementaryChannel)
+	}
+	return channels
+}
+
+func (rm *repoMgr) repoIDForChannel(channel string) string {
+	return fmt.Sprintf("rhel-%d-for-%s-%s-rpms", rm.systemInfo.OsVersion, rm.systemInfo.Arch, strings.ToLower(channel))
+}
+
+func (rm *repoMgr) GetRepoIDs(needSupplementary bool) ([]string, error) {
+	if !rm.systemInfo.IsRhel {
+		return nil, nil
+	}
+	channels := rm.getChannels(needSupplementary)
+	repos := make([]string, len(channels))
+	for i, ch := range channels {
+		repos[i] = rm.repoIDForChannel(ch)
+	}
+	return repos, nil
+}
+
 func (rm *repoMgr) EnsureRepositoriesEnabled(needSupplementary bool) error {
 	if rm.systemInfo.IsRhel {
 		log.Logf("detected RHEL %d", rm.systemInfo.OsVersion)
 		if rm.subscriptionManagerPresent() {
 			log.Logf("Subscription Manager is present")
-			channels := []string{"BaseOS", "AppStream", "Extensions"}
-			if needSupplementary {
-				channels = append(channels, "Supplementary")
-			}
-			return rm.ensureChannelsEnabled(channels)
+			return rm.ensureChannelsEnabled(rm.getChannels(needSupplementary))
 		} else {
 			log.Warnf("Subscription Manager is absent.")
 			log.Warnf("You may need to enable appropriate repositories yourself.")
@@ -69,7 +92,7 @@ func (rm *repoMgr) ensureChannelsEnabled(channels []string) error {
 	allEnabled := true
 	args := []string{"repos"}
 	for _, channel := range channels {
-		repo := fmt.Sprintf("rhel-%d-for-%s-%s-rpms", rm.systemInfo.OsVersion, rm.systemInfo.Arch, strings.ToLower(channel))
+		repo := rm.repoIDForChannel(channel)
 		log.Logf("mapped RHEL channel %s to repo ID %s", channel, repo)
 		if !repoEnabled(rm.redhatRepoPath, repo) {
 			log.Infof("enabling channel %s, repository %s", channel, repo)

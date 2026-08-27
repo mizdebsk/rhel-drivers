@@ -46,3 +46,18 @@ func (mr *MockRepositoryManagerMockRecorder) EnsureRepositoriesEnabled(needSuppl
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "EnsureRepositoriesEnabled", reflect.TypeOf((*MockRepositoryManager)(nil).EnsureRepositoriesEnabled), needSupplementary)
 }
+
+// GetRepoIDs mocks base method.
+func (m *MockRepositoryManager) GetRepoIDs(needSupplementary bool) ([]string, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetRepoIDs", needSupplementary)
+	ret0, _ := ret[0].([]string)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetRepoIDs indicates an expected call of GetRepoIDs.
+func (mr *MockRepositoryManagerMockRecorder) GetRepoIDs(needSupplementary interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetRepoIDs", reflect.TypeOf((*MockRepositoryManager)(nil).GetRepoIDs), needSupplementary)
+}

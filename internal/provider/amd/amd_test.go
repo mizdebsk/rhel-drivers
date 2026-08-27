@@ -15,6 +15,8 @@ type fakePackageManager struct {
 	available []api.PackageInfo
 }
 
+func (f fakePackageManager) SetEnableRepos(_ []string) {}
+
 func (f fakePackageManager) Install(packages []string, batchMode, dryRun bool) error {
 	return nil
 }

@@ -3,6 +3,7 @@ package core
 import (
 	"fmt"
 	"slices"
+	"strings"
 
 	"github.com/mizdebsk/radii/internal/api"
 	"github.com/mizdebsk/radii/internal/log"
@@ -11,6 +12,13 @@ import (
 func InstallSpecific(deps api.CoreDeps, drivers []string, batchMode, dryRun, force bool) error {
 	if len(drivers) == 0 {
 		return fmt.Errorf("not specified what to install")
+	}
+
+	needSupplementary := slices.ContainsFunc(drivers, func(d string) bool {
+		return strings.HasPrefix(d, "nvidia:")
+	})
+	if err := deps.RepositoryManager.EnsureRepositoriesEnabled(needSupplementary); err != nil {
+		return fmt.Errorf("failed to verify/enable repositories: %w", err)
 	}
 
 	var toInstall []api.DriverID
@@ -50,9 +58,7 @@ outer:
 }
 
 func InstallAutoDetect(deps api.CoreDeps, batchMode, dryRun bool) error {
-	var toInstall []api.DriverID
-
-	hardwareDetected := false
+	var detectedProviders []api.Provider
 	for _, provider := range deps.Providers {
 		detected, err := provider.DetectHardware()
 		if err != nil {
@@ -60,19 +66,31 @@ func InstallAutoDetect(deps api.CoreDeps, batchMode, dryRun bool) error {
 			continue
 		}
 		if detected {
-			hardwareDetected = true
 			log.Logf("detected %s hardware", provider.GetName())
-			available, err := provider.ListAvailable()
-			if err != nil {
-				return fmt.Errorf("failed to list available %s drivers: %w", provider.GetName(), err)
-			}
-			if len(available) > 0 {
-				toInstall = append(toInstall, available[0])
-			}
+			detectedProviders = append(detectedProviders, provider)
 		}
 	}
-	if !hardwareDetected {
+	if len(detectedProviders) == 0 {
 		return fmt.Errorf("no compatible hardware found")
+	}
+
+	needSupplementary := slices.ContainsFunc(detectedProviders, func(p api.Provider) bool {
+		return p.GetID() == "nvidia"
+	})
+	if err := deps.RepositoryManager.EnsureRepositoriesEnabled(needSupplementary); err != nil {
+		return fmt.Errorf("failed to verify/enable repositories: %w", err)
+	}
+
+	var toInstall []api.DriverID
+	for _, provider := range detectedProviders {
+		available, err := provider.ListAvailable()
+		if err != nil {
+			return fmt.Errorf("failed to list available %s drivers: %w", provider.GetName(), err)
+		}
+		if len(available) > 0 {
+			// Pick the latest version (providers return sorted newest-first)
+			toInstall = append(toInstall, available[0])
+		}
 	}
 	if len(toInstall) == 0 {
 		return fmt.Errorf("no drivers available for detected hardware")
@@ -82,12 +100,6 @@ func InstallAutoDetect(deps api.CoreDeps, batchMode, dryRun bool) error {
 }
 
 func doInstall(deps api.CoreDeps, toInstall []api.DriverID, batchMode, dryRun bool) error {
-	needSupplementary := slices.ContainsFunc(toInstall, func(d api.DriverID) bool {
-		return d.ProviderID == "nvidia"
-	})
-	if err := deps.RepositoryManager.EnsureRepositoriesEnabled(needSupplementary); err != nil {
-		return fmt.Errorf("failed to verify/enable repositories: %w", err)
-	}
 	var allPkgs []string
 	for _, provider := range deps.Providers {
 		provID := provider.GetID()
