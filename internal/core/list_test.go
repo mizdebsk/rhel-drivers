@@ -13,15 +13,15 @@ import (
 
 func TestList(t *testing.T) {
 	tests := []struct {
-		name      string
+		name           string
 		listInst       bool
 		listAvail      bool
 		hwdetect       bool
 		compatibleOnly bool
-		setup          func(*mocks.MockProvider, *mocks.MockRepositoryManager)
-		expectErr bool
-		expectLen int
-		checkFunc func([]api.DriverStatus) error
+		setup          func(*mocks.MockProvider, *mocks.MockPackageManager, *mocks.MockRepositoryManager)
+		expectErr      bool
+		expectLen      int
+		checkFunc      func([]api.DriverStatus) error
 	}{
 		{
 			name:           "ListInstalledOnly",
@@ -29,7 +29,7 @@ func TestList(t *testing.T) {
 			listAvail:      false,
 			hwdetect:       false,
 			compatibleOnly: false,
-			setup: func(p *mocks.MockProvider, rm *mocks.MockRepositoryManager) {
+			setup: func(p *mocks.MockProvider, pm *mocks.MockPackageManager, rm *mocks.MockRepositoryManager) {
 				p.EXPECT().GetID().Return("nvidia").AnyTimes()
 				p.EXPECT().GetName().Return("NVIDIA").AnyTimes()
 				p.EXPECT().ListInstalled().Return([]api.DriverID{
@@ -51,10 +51,11 @@ func TestList(t *testing.T) {
 			listAvail:      true,
 			hwdetect:       false,
 			compatibleOnly: false,
-			setup: func(p *mocks.MockProvider, rm *mocks.MockRepositoryManager) {
+			setup: func(p *mocks.MockProvider, pm *mocks.MockPackageManager, rm *mocks.MockRepositoryManager) {
 				p.EXPECT().GetID().Return("nvidia").AnyTimes()
 				p.EXPECT().GetName().Return("NVIDIA").AnyTimes()
-				rm.EXPECT().EnsureRepositoriesEnabled().Return(nil)
+				rm.EXPECT().GetRepoIDs(true).Return([]string{"rhel-10-for-x86_64-baseos-rpms"}, nil)
+				pm.EXPECT().SetEnableRepos(gomock.Any())
 				p.EXPECT().ListAvailable().Return([]api.DriverID{
 					{ProviderID: "nvidia", Version: "570.86.16"},
 				}, nil)
@@ -74,10 +75,11 @@ func TestList(t *testing.T) {
 			listAvail:      true,
 			hwdetect:       false,
 			compatibleOnly: false,
-			setup: func(p *mocks.MockProvider, rm *mocks.MockRepositoryManager) {
+			setup: func(p *mocks.MockProvider, pm *mocks.MockPackageManager, rm *mocks.MockRepositoryManager) {
 				p.EXPECT().GetID().Return("nvidia").AnyTimes()
 				p.EXPECT().GetName().Return("NVIDIA").AnyTimes()
-				rm.EXPECT().EnsureRepositoriesEnabled().Return(nil)
+				rm.EXPECT().GetRepoIDs(true).Return([]string{"rhel-10-for-x86_64-baseos-rpms"}, nil)
+				pm.EXPECT().SetEnableRepos(gomock.Any())
 				p.EXPECT().ListInstalled().Return([]api.DriverID{
 					{ProviderID: "nvidia", Version: "570.86.16"},
 				}, nil)
@@ -106,11 +108,12 @@ func TestList(t *testing.T) {
 			listAvail:      true,
 			hwdetect:       true,
 			compatibleOnly: false,
-			setup: func(p *mocks.MockProvider, rm *mocks.MockRepositoryManager) {
+			setup: func(p *mocks.MockProvider, pm *mocks.MockPackageManager, rm *mocks.MockRepositoryManager) {
 				p.EXPECT().GetID().Return("nvidia").AnyTimes()
 				p.EXPECT().GetName().Return("NVIDIA").AnyTimes()
 				p.EXPECT().DetectHardware().Return(true, nil)
-				rm.EXPECT().EnsureRepositoriesEnabled().Return(nil)
+				rm.EXPECT().GetRepoIDs(true).Return([]string{"rhel-10-for-x86_64-baseos-rpms"}, nil)
+				pm.EXPECT().SetEnableRepos(gomock.Any())
 				p.EXPECT().ListInstalled().Return([]api.DriverID{}, nil)
 				p.EXPECT().ListAvailable().Return([]api.DriverID{
 					{ProviderID: "nvidia", Version: "570.86.16"},
@@ -126,15 +129,30 @@ func TestList(t *testing.T) {
 			},
 		},
 		{
-			name:           "RepositoryEnableFails",
+			name:           "GetRepoIDsFails",
 			listInst:       false,
 			listAvail:      true,
 			hwdetect:       false,
 			compatibleOnly: false,
-			setup: func(p *mocks.MockProvider, rm *mocks.MockRepositoryManager) {
-				rm.EXPECT().EnsureRepositoriesEnabled().Return(fmt.Errorf("repo error"))
+			setup: func(p *mocks.MockProvider, pm *mocks.MockPackageManager, rm *mocks.MockRepositoryManager) {
+				rm.EXPECT().GetRepoIDs(true).Return(nil, fmt.Errorf("repo error"))
 			},
 			expectErr: true,
+			expectLen: 0,
+		},
+		{
+			name:           "GetRepoIDsReturnsEmpty",
+			listInst:       false,
+			listAvail:      true,
+			hwdetect:       false,
+			compatibleOnly: false,
+			setup: func(p *mocks.MockProvider, pm *mocks.MockPackageManager, rm *mocks.MockRepositoryManager) {
+				p.EXPECT().GetID().Return("nvidia").AnyTimes()
+				p.EXPECT().GetName().Return("NVIDIA").AnyTimes()
+				rm.EXPECT().GetRepoIDs(true).Return(nil, nil)
+				p.EXPECT().ListAvailable().Return([]api.DriverID{}, nil)
+			},
+			expectErr: false,
 			expectLen: 0,
 		},
 		{
@@ -143,7 +161,7 @@ func TestList(t *testing.T) {
 			listAvail:      false,
 			hwdetect:       false,
 			compatibleOnly: false,
-			setup: func(p *mocks.MockProvider, rm *mocks.MockRepositoryManager) {
+			setup: func(p *mocks.MockProvider, pm *mocks.MockPackageManager, rm *mocks.MockRepositoryManager) {
 				p.EXPECT().GetID().Return("nvidia").AnyTimes()
 				p.EXPECT().GetName().Return("NVIDIA").AnyTimes()
 				p.EXPECT().ListInstalled().Return(nil, fmt.Errorf("list failed"))
@@ -157,10 +175,11 @@ func TestList(t *testing.T) {
 			listAvail:      true,
 			hwdetect:       false,
 			compatibleOnly: false,
-			setup: func(p *mocks.MockProvider, rm *mocks.MockRepositoryManager) {
+			setup: func(p *mocks.MockProvider, pm *mocks.MockPackageManager, rm *mocks.MockRepositoryManager) {
 				p.EXPECT().GetID().Return("nvidia").AnyTimes()
 				p.EXPECT().GetName().Return("NVIDIA").AnyTimes()
-				rm.EXPECT().EnsureRepositoriesEnabled().Return(nil)
+				rm.EXPECT().GetRepoIDs(true).Return([]string{"rhel-10-for-x86_64-baseos-rpms"}, nil)
+				pm.EXPECT().SetEnableRepos(gomock.Any())
 				p.EXPECT().ListInstalled().Return([]api.DriverID{}, nil)
 				p.EXPECT().ListAvailable().Return(nil, fmt.Errorf("list failed"))
 			},
@@ -173,10 +192,11 @@ func TestList(t *testing.T) {
 			listAvail:      true,
 			hwdetect:       false,
 			compatibleOnly: false,
-			setup: func(p *mocks.MockProvider, rm *mocks.MockRepositoryManager) {
+			setup: func(p *mocks.MockProvider, pm *mocks.MockPackageManager, rm *mocks.MockRepositoryManager) {
 				p.EXPECT().GetID().Return("nvidia").AnyTimes()
 				p.EXPECT().GetName().Return("NVIDIA").AnyTimes()
-				rm.EXPECT().EnsureRepositoriesEnabled().Return(nil)
+				rm.EXPECT().GetRepoIDs(true).Return([]string{"rhel-10-for-x86_64-baseos-rpms"}, nil)
+				pm.EXPECT().SetEnableRepos(gomock.Any())
 				p.EXPECT().ListInstalled().Return([]api.DriverID{}, nil)
 				p.EXPECT().ListAvailable().Return([]api.DriverID{}, nil)
 			},
@@ -189,11 +209,12 @@ func TestList(t *testing.T) {
 			listAvail:      true,
 			hwdetect:       true,
 			compatibleOnly: true,
-			setup: func(p *mocks.MockProvider, rm *mocks.MockRepositoryManager) {
+			setup: func(p *mocks.MockProvider, pm *mocks.MockPackageManager, rm *mocks.MockRepositoryManager) {
 				p.EXPECT().GetID().Return("nvidia").AnyTimes()
 				p.EXPECT().GetName().Return("NVIDIA").AnyTimes()
 				p.EXPECT().DetectHardware().Return(true, nil)
-				rm.EXPECT().EnsureRepositoriesEnabled().Return(nil)
+				rm.EXPECT().GetRepoIDs(true).Return([]string{"rhel-10-for-x86_64-baseos-rpms"}, nil)
+				pm.EXPECT().SetEnableRepos(gomock.Any())
 				p.EXPECT().ListInstalled().Return([]api.DriverID{}, nil)
 				p.EXPECT().ListAvailable().Return([]api.DriverID{
 					{ProviderID: "nvidia", Version: "570"},
@@ -217,11 +238,12 @@ func TestList(t *testing.T) {
 			listAvail:      true,
 			hwdetect:       true,
 			compatibleOnly: true,
-			setup: func(p *mocks.MockProvider, rm *mocks.MockRepositoryManager) {
+			setup: func(p *mocks.MockProvider, pm *mocks.MockPackageManager, rm *mocks.MockRepositoryManager) {
 				p.EXPECT().GetID().Return("nvidia").AnyTimes()
 				p.EXPECT().GetName().Return("NVIDIA").AnyTimes()
 				p.EXPECT().DetectHardware().Return(false, nil)
-				rm.EXPECT().EnsureRepositoriesEnabled().Return(nil)
+				rm.EXPECT().GetRepoIDs(true).Return([]string{"rhel-10-for-x86_64-baseos-rpms"}, nil)
+				pm.EXPECT().SetEnableRepos(gomock.Any())
 				p.EXPECT().ListInstalled().Return([]api.DriverID{}, nil)
 				p.EXPECT().ListAvailable().Return([]api.DriverID{
 					{ProviderID: "nvidia", Version: "570"},
@@ -244,11 +266,13 @@ func TestList(t *testing.T) {
 			defer ctrl.Finish()
 
 			mockProvider := mocks.NewMockProvider(ctrl)
+			mockPM := mocks.NewMockPackageManager(ctrl)
 			mockRM := mocks.NewMockRepositoryManager(ctrl)
 
-			tt.setup(mockProvider, mockRM)
+			tt.setup(mockProvider, mockPM, mockRM)
 
 			deps := api.CoreDeps{
+				PackageManager:    mockPM,
 				RepositoryManager: mockRM,
 				Providers:         []api.Provider{mockProvider},
 			}

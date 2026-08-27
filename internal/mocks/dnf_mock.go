@@ -34,6 +34,18 @@ func (m *MockPackageManager) EXPECT() *MockPackageManagerMockRecorder {
 	return m.recorder
 }
 
+// SetEnableRepos mocks base method.
+func (m *MockPackageManager) SetEnableRepos(repos []string) {
+	m.ctrl.T.Helper()
+	m.ctrl.Call(m, "SetEnableRepos", repos)
+}
+
+// SetEnableRepos indicates an expected call of SetEnableRepos.
+func (mr *MockPackageManagerMockRecorder) SetEnableRepos(repos interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetEnableRepos", reflect.TypeOf((*MockPackageManager)(nil).SetEnableRepos), repos)
+}
+
 // Install mocks base method.
 func (m *MockPackageManager) Install(packages []string, batchMode, dryRun bool) error {
 	m.ctrl.T.Helper()

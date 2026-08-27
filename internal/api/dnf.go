@@ -3,6 +3,7 @@ package api
 //go:generate mockgen -source=dnf.go -destination=../mocks/dnf_mock.go -package=mocks
 
 type PackageManager interface {
+	SetEnableRepos(repos []string)
 	ListAvailablePackages() ([]PackageInfo, error)
 	ListInstalledPackages() ([]PackageInfo, error)
 	Install(packages []string, batchMode, dryRun bool) error
