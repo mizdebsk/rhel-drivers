@@ -2,66 +2,9 @@ package nvidia
 
 import (
 	"testing"
+
+	"github.com/mizdebsk/radii/internal/hwdetect"
 )
-
-func TestNormalizeDevID(t *testing.T) {
-	tests := []struct {
-		name string
-		in   string
-		out  string
-	}{
-		{
-			name: "hex with 0x prefix upper",
-			in:   "0x31C2",
-			out:  "31c2",
-		},
-		{
-			name: "hex with 0x prefix lower",
-			in:   "0x1ad3",
-			out:  "1ad3",
-		},
-		{
-			name: "hex without prefix",
-			in:   "1AD3",
-			out:  "1ad3",
-		},
-		{
-			name: "long id keeps last four",
-			in:   "0x000031C2",
-			out:  "31c2",
-		},
-		{
-			name: "spaces trimmed",
-			in:   "  0x31C2  ",
-			out:  "31c2",
-		},
-		{
-			name: "empty string",
-			in:   "",
-			out:  "",
-		},
-		{
-			name: "only 0x prefix",
-			in:   "0x",
-			out:  "",
-		},
-		{
-			name: "short id (less than four)",
-			in:   "0x1a",
-			out:  "1a",
-		},
-	}
-
-	for _, tt := range tests {
-		tt := tt
-		t.Run(tt.name, func(t *testing.T) {
-			got := normalizeDevID(tt.in)
-			if got != tt.out {
-				t.Fatalf("normalizeDevID(%q) = %q, want %q", tt.in, got, tt.out)
-			}
-		})
-	}
-}
 
 func TestHasFeature(t *testing.T) {
 	tests := []struct {
@@ -107,7 +50,11 @@ func TestIsCompatibleNvidiaDisplay_Found(t *testing.T) {
 		"31c2": "NVIDIA A100-PCIE-40GB",
 	}
 	modal := "pci:v000010DEd000031C2sv000010DEsd000013C2bc03sc00i00"
-	if !d.isCompatibleNvidiaDisplay(modal, compatible) {
+	parsed, valid := hwdetect.ParsePCIModalias(modal)
+	if !valid {
+		t.Fatalf("expected modalias %q to be valid", modal)
+	}
+	if !d.isCompatibleNvidiaDisplay(parsed, compatible) {
 		t.Fatalf("expected modalias %q to be detected as compatible NVIDIA display", modal)
 	}
 }
@@ -146,7 +93,8 @@ func TestIsCompatibleNvidiaDisplay_NotFoundOrInvalid(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got := d.isCompatibleNvidiaDisplay(tt.modal, compatible)
+			modal, valid := hwdetect.ParsePCIModalias(tt.modal)
+			got := valid && d.isCompatibleNvidiaDisplay(modal, compatible)
 			if got != tt.wantHit {
 				t.Fatalf("isCompatibleNvidiaDisplay(%q) = %v, want %v", tt.modal, got, tt.wantHit)
 			}
