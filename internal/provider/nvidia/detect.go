@@ -3,22 +3,15 @@ package nvidia
 import (
 	"encoding/json"
 	"fmt"
-	"io/fs"
 	"os"
-	"path/filepath"
-	"regexp"
-	"strings"
 
+	"github.com/mizdebsk/radii/internal/hwdetect"
 	"github.com/mizdebsk/radii/internal/log"
 )
 
 const (
 	defaultHwdataJsonPath = "/usr/share/radii-hwdata-nv/hwdata-nv.json"
-	defaultModaliasRoot   = "/sys/devices"
-
-	modaliasBus     = "pci"
-	pciClassDisplay = "03"
-	nvidiaVendor    = "10de"
+	nvidiaVendor          = "10de"
 )
 
 type autoDetector struct {
@@ -29,7 +22,7 @@ type autoDetector struct {
 func newAutoDetector() autoDetector {
 	return autoDetector{
 		hwdataJsonPath: defaultHwdataJsonPath,
-		modaliasRoot:   defaultModaliasRoot,
+		modaliasRoot:   hwdetect.DefaultModaliasRoot,
 	}
 }
 
@@ -42,7 +35,9 @@ func (d *autoDetector) Detect() (bool, error) {
 		return false, nil
 	}
 
-	found, err := d.scanModaliases(compatible)
+	found, err := hwdetect.ScanPCIModaliases(d.modaliasRoot, "NVIDIA", func(modalias hwdetect.PCIModalias) bool {
+		return d.isCompatibleNvidiaDisplay(modalias, compatible)
+	})
 	if err != nil {
 		return false, err
 	}
@@ -77,7 +72,7 @@ func (d *autoDetector) loadCompatibleDevices() (map[string]string, error) {
 		if !hasFeature(chip.Features, "kernelopen") {
 			continue
 		}
-		dev := normalizeDevID(chip.DevID)
+		dev := hwdetect.NormalizeID(chip.DevID)
 		if dev == "" {
 			continue
 		}
@@ -96,102 +91,15 @@ func hasFeature(features []string, name string) bool {
 	return false
 }
 
-func normalizeDevID(id string) string {
-	id = strings.TrimSpace(id)
-	id = strings.ToLower(id)
-	id = strings.TrimPrefix(id, "0x")
-	if len(id) == 0 {
-		return ""
-	}
-	if len(id) > 4 {
-		return id[len(id)-4:]
-	}
-	return id
-}
-
-func (d *autoDetector) scanModaliases(compatible map[string]string) (bool, error) {
-	found := false
-
-	walkFn := func(path string, de fs.DirEntry, err error) error {
-		if err != nil {
-			return err
-		}
-		if de.IsDir() {
-			return nil
-		}
-		if de.Name() != "modalias" {
-			return nil
-		}
-
-		content, err := os.ReadFile(path)
-		if err != nil {
-			log.Errorf("failed to read modalias %s: %v", path, err)
-			return nil
-		}
-		modal := strings.TrimSpace(strings.ToLower(string(content)))
-		if d.isCompatibleNvidiaDisplay(modal, compatible) {
-			log.Logf("modalias path: %s", path)
-			log.Logf("modalias entry: %s", modal)
-			found = true
-		}
-
-		return nil
-	}
-
-	log.Logf("scanning modalias files in %s", d.modaliasRoot)
-	err := filepath.WalkDir(d.modaliasRoot, walkFn)
-	if err != nil {
-		return false, fmt.Errorf("error scanning modalias files in %s: %w", d.modaliasRoot, err)
-	}
-	if found {
-		log.Logf("compatible NVIDIA hardware was found")
-	} else {
-		log.Logf("compatible NVIDIA hardware was NOT found")
-	}
-	return found, nil
-}
-
-var modaliasRe = regexp.MustCompile(
-	`^(pci):` + // bus
-		`v([0-9A-Fa-f]{8})` + // vendor
-		`d([0-9A-Fa-f]{8})` + // device
-		`sv([0-9A-Fa-f]{8})` + // subvendor
-		`sd([0-9A-Fa-f]{8})` + // subdevice
-		`bc([0-9A-Fa-f]{2})` + // base class
-		`sc([0-9A-Fa-f]{2})` + // subclass
-		`i([0-9A-Fa-f]{2})$`, // interface
-)
-
-func (d *autoDetector) isCompatibleNvidiaDisplay(modalias string, compatible map[string]string) bool {
-	if !strings.HasPrefix(modalias, modaliasBus+":") {
+func (d *autoDetector) isCompatibleNvidiaDisplay(modalias hwdetect.PCIModalias, compatible map[string]string) bool {
+	if modalias.VendorID != nvidiaVendor {
 		return false
 	}
-	m := modaliasRe.FindStringSubmatch(modalias)
-	if m == nil {
-		log.Debugf("invalid modalias: %s", modalias)
+	if modalias.BaseClass != hwdetect.PCIClassDisplay {
 		return false
 	}
 
-	//bus := m[1]
-	vendor := strings.ToLower(m[2])
-	device := strings.ToLower(m[3])
-	//subVendor := strings.ToLower(m[4])
-	//subDevice := strings.ToLower(m[5])
-	baseClass := strings.ToLower(m[6])
-	//subClass := strings.ToLower(m[7])
-	//iface := strings.ToLower(m[8])
-
-	vendor4 := vendor[len(vendor)-4:]
-	device4 := device[len(device)-4:]
-
-	if vendor4 != nvidiaVendor {
-		return false
-	}
-	if baseClass != pciClassDisplay {
-		return false
-	}
-
-	if name, ok := compatible[device4]; ok {
+	if name, ok := compatible[modalias.DeviceID]; ok {
 		log.Infof("found compatible hardware: %s", name)
 		return true
 	}
