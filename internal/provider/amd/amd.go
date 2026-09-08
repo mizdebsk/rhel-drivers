@@ -1,9 +1,8 @@
 package amd
 
 import (
-	"fmt"
-
 	"github.com/mizdebsk/radii/internal/api"
+	"github.com/mizdebsk/radii/internal/hwdetect"
 	"github.com/mizdebsk/radii/internal/log"
 )
 
@@ -84,5 +83,5 @@ func (p *prov) ListAvailable() ([]api.DriverID, error) {
 }
 
 func (p *prov) DetectHardware() (bool, error) {
-	return false, fmt.Errorf("hardware detection for %s is not implemented", p.GetName())
+	return detectHardware(hwdetect.DefaultModaliasRoot)
 }
