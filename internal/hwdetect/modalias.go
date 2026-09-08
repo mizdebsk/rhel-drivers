@@ -14,7 +14,8 @@ import (
 const (
 	DefaultModaliasRoot = "/sys/devices"
 
-	PCIClassDisplay = "03"
+	PCIClassDisplay               = "03"
+	PCIClassProcessingAccelerator = "12"
 )
 
 type PCIModalias struct {
