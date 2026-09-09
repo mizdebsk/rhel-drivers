@@ -83,17 +83,8 @@ func (p *prov) ListInstalled() ([]api.DriverID, error) {
 	if err != nil {
 		return []api.DriverID{}, err
 	}
-	packages := stackPackages()
-	installed, missing := partitionPackages(all, packages...)
-	switch len(missing) {
-	case len(packages):
-		log.Logf("%s stack is currently NOT installed", p.GetName())
+	if !hasPackage(all, pkgKmodAmdgpu) {
 		return []api.DriverID{}, nil
-	case 0:
-		log.Logf("%s stack is currently installed", p.GetName())
-	default:
-		log.Warnf("%s stack is partially installed; installed: %s; missing: %s",
-			p.GetName(), strings.Join(installed, ", "), strings.Join(missing, ", "))
 	}
 	return []api.DriverID{{ProviderID: p.GetID(), Version: variantLatest}}, nil
 }
@@ -105,7 +96,12 @@ func (p *prov) Remove(drivers []api.DriverID) ([]string, error) {
 	if err := validateDrivers(drivers, p.GetName()); err != nil {
 		return nil, err
 	}
-	return stackPackages(), nil
+	all, err := p.PM.ListInstalledPackages()
+	if err != nil {
+		return []string{}, fmt.Errorf("failed to list installed packages: %w", err)
+	}
+	installed, _ := partitionPackages(all, stackPackages()...)
+	return installed, nil
 }
 
 func (p *prov) ListAvailable() ([]api.DriverID, error) {

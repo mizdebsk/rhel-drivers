@@ -9,7 +9,7 @@ import (
 	"github.com/mizdebsk/radii/internal/mocks"
 )
 
-func TestInstallAndRemoveLatest(t *testing.T) {
+func TestInstallLatest(t *testing.T) {
 	provider := NewProvider(nil).(*prov)
 	drivers := []api.DriverID{{ProviderID: "amdgpu", Version: variantLatest}}
 	want := []string{pkgKmodAmdgpu, pkgRocm}
@@ -21,13 +21,42 @@ func TestInstallAndRemoveLatest(t *testing.T) {
 	if !reflect.DeepEqual(installed, want) {
 		t.Fatalf("Install() = %v, want %v", installed, want)
 	}
+}
 
-	removed, err := provider.Remove(drivers)
-	if err != nil {
-		t.Fatalf("Remove() error = %v", err)
+func TestRemoveLatestPackageStates(t *testing.T) {
+	tests := []struct {
+		name      string
+		installed []api.PackageInfo
+		want      []string
+	}{
+		{name: "neither package", installed: nil, want: nil},
+		{name: "ROCm only", installed: []api.PackageInfo{{Name: pkgRocm}}, want: []string{pkgRocm}},
+		{name: "kernel module only", installed: []api.PackageInfo{{Name: pkgKmodAmdgpu}}, want: []string{pkgKmodAmdgpu}},
+		{
+			name: "complete stack",
+			installed: []api.PackageInfo{
+				{Name: pkgKmodAmdgpu},
+				{Name: pkgRocm},
+			},
+			want: []string{pkgKmodAmdgpu, pkgRocm},
+		},
 	}
-	if !reflect.DeepEqual(removed, want) {
-		t.Fatalf("Remove() = %v, want %v", removed, want)
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			ctrl := gomock.NewController(t)
+			packageManager := mocks.NewMockPackageManager(ctrl)
+			packageManager.EXPECT().ListInstalledPackages().Return(tt.installed, nil)
+			provider := NewProvider(packageManager).(*prov)
+
+			got, err := provider.Remove([]api.DriverID{{ProviderID: "amdgpu", Version: variantLatest}})
+			if err != nil {
+				t.Fatalf("Remove() error = %v", err)
+			}
+			if !reflect.DeepEqual(got, tt.want) {
+				t.Fatalf("Remove() = %v, want %v", got, tt.want)
+			}
+		})
 	}
 }
 
@@ -53,7 +82,7 @@ func TestListInstalledPackageStates(t *testing.T) {
 		{
 			name:      "ROCm only",
 			installed: []api.PackageInfo{{Name: pkgRocm}},
-			want:      []api.DriverID{{ProviderID: "amdgpu", Version: variantLatest}},
+			want:      []api.DriverID{},
 		},
 		{
 			name:      "kernel module only",
