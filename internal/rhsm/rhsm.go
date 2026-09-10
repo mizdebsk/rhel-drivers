@@ -38,6 +38,9 @@ func (rm *repoMgr) EnsureRepositoriesEnabled() error {
 		log.Logf("detected RHEL %d", rm.systemInfo.OsVersion)
 		if rm.subscriptionManagerPresent() {
 			log.Logf("Subscription Manager is present")
+			if err := rm.executor.Run(rm.rhsmExecPath, []string{"status"}); err != nil {
+				return fmt.Errorf("subscription-manager is not configured: %w", err)
+			}
 			channels := []string{"BaseOS", "AppStream", "Extensions", "Supplementary"}
 			return rm.ensureChannelsEnabled(channels)
 		} else {

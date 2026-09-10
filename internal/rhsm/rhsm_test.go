@@ -24,6 +24,9 @@ func TestRhsm(t *testing.T) {
 			sysInfo: sysinfo.SysInfo{IsRhel: true, OsVersion: 5, Arch: "sparc"},
 			testFunc: func(t *testing.T) error {
 				mockExec.EXPECT().
+					Run(rm.rhsmExecPath, []string{"status"}).
+					Return(nil)
+				mockExec.EXPECT().
 					Run(rm.rhsmExecPath, []string{
 						"repos",
 						"--enable", "rhel-5-for-sparc-baseos-rpms",
@@ -39,6 +42,9 @@ func TestRhsm(t *testing.T) {
 			name:    "EnableReposFailure",
 			sysInfo: sysinfo.SysInfo{IsRhel: true, OsVersion: 5, Arch: "sparc"},
 			testFunc: func(t *testing.T) error {
+				mockExec.EXPECT().
+					Run(rm.rhsmExecPath, []string{"status"}).
+					Return(nil)
 				mockExec.EXPECT().
 					Run(rm.rhsmExecPath, []string{
 						"repos",
@@ -56,8 +62,22 @@ func TestRhsm(t *testing.T) {
 			name:    "ReopsAlreadyEnabled",
 			sysInfo: sysinfo.SysInfo{IsRhel: true, OsVersion: 10, Arch: "x86_64"},
 			testFunc: func(t *testing.T) error {
+				mockExec.EXPECT().
+					Run(rm.rhsmExecPath, []string{"status"}).
+					Return(nil)
 				return rm.EnsureRepositoriesEnabled()
 			},
+		},
+		{
+			name:    "SubscriptionManagerNotConfigured",
+			sysInfo: sysinfo.SysInfo{IsRhel: true, OsVersion: 10, Arch: "x86_64"},
+			testFunc: func(t *testing.T) error {
+				mockExec.EXPECT().
+					Run(rm.rhsmExecPath, []string{"status"}).
+					Return(fmt.Errorf("subscription-manager command failed: exit status 1"))
+				return rm.EnsureRepositoriesEnabled()
+			},
+			expectErr: true,
 		},
 		{
 			name:    "SubscriptionManagerAbsent",
